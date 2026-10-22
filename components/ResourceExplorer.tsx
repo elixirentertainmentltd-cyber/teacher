@@ -39,15 +39,15 @@ export default function ResourceExplorer({ initialStage }: { initialStage: Filte
               </div>
             </div>
           </div>
-          <div className="results-bar"><strong>{results.length} {results.length===1?"resource":"resources"}</strong><span>Resources will appear here as they are published.</span></div>
+          <div className="results-bar"><strong>{results.length} {results.length===1?"resource":"resources"}</strong><span>Browse interactive activities and printable resources.</span></div>
           {results.length ? <div className="resource-grid library-grid">
-            {results.map((item,index)=><Link key={item.slug} href={"/worksheet/"+item.slug} className={"resource-card accent-"+item.colour}>
+            {results.map((item,index)=><Link key={item.slug} href={item.type==="Interactive activity" ? "/resources/"+item.slug : "/worksheet/"+item.slug} className={"resource-card accent-"+item.colour}>
               <div className="resource-top"><span className="resource-subject">{item.subject}</span><span className="round-arrow"><ArrowUpRight size={18}/></span></div>
-              <div className="resource-doodle">{({ "number-bonds":"10", "addition-subtraction":"➕", "spelling":"Aa", "times-tables":"×", "punctuation":"?!", "fractions":"½", "percentages":"%", "algebra":"x²" } as Record<string,string>)[item.slug] || "✎"}</div>
+              <div className="resource-doodle">{({ "number-bonds":"10", "addition-subtraction":"➕", "spelling":"Aa", "times-tables":"×", "punctuation":"?!", "fractions":"½", "percentages":"%", "algebra":"x²" } as Record<string,string>)[item.slug] || (item.slug==="clock-adventures" ? "◷" : "✎")}</div>
               <h3>{item.title}</h3><p>{item.description}</p>
               <div className="resource-footer"><span>{item.stages.join(" · ")}</span><span>{item.years}</span></div>
             </Link>)}
-          </div> : <div className="empty-state"><span className="empty-emoji">🔎</span><h2>No resources published yet.</h2><p>We are rebuilding the library. Please check back later.</p><button className="button button-primary" onClick={reset}>Clear filters <X size={17}/></button></div>}
+          </div> : <div className="empty-state"><span className="empty-emoji">🔎</span><h2>No matching resources found.</h2><p>Try changing your search, subject or Key Stage.</p><button className="button button-primary" onClick={reset}>Clear filters <X size={17}/></button></div>}
           <div className="library-note"><strong>A note for teachers:</strong> These are original, starter practice activities, not an officially endorsed exam-board collection. Please review suitability for your class and specification.</div>
         </div>
       </section>

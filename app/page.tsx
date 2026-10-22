@@ -16,7 +16,7 @@ export default function HomePage() {
               <Link className="button button-outline" href="/tools">Try teacher tools <WandSparkles size={18}/></Link>
             </div>
             <div className="hero-facts">
-              <span><CheckCircle2 size={18}/> KS1 to KS4</span><span><CheckCircle2 size={18}/> Made for UK teachers</span><span><CheckCircle2 size={18}/> New resources coming soon</span>
+              <span><CheckCircle2 size={18}/> KS1 to KS4</span><span><CheckCircle2 size={18}/> Made for UK teachers</span><span><CheckCircle2 size={18}/> Interactive resources available</span>
             </div>
           </div>
           <div className="hero-art" aria-label="Teachrex, the Teach Me a Lesson mascot">
@@ -33,7 +33,7 @@ export default function HomePage() {
       <section className="section stage-section">
         <div className="container">
           <div className="section-kicker"><Sparkles size={17}/> SOMETHING FOR EVERY STAGE</div>
-          <div className="section-header"><div><h2>Find your happy place<br/><em>in the classroom.</em></h2><p>The library is clear and ready for a fresh collection across all four Key Stages.</p></div><Link className="text-link" href="/resources">Browse everything <ArrowUpRight size={18}/></Link></div>
+          <div className="section-header"><div><h2>Find your happy place<br/><em>in the classroom.</em></h2><p>Explore Key Stage activities, beginning with interactive clock learning for KS1 and KS2.</p></div><Link className="text-link" href="/resources">Browse everything <ArrowUpRight size={18}/></Link></div>
           <div className="stage-grid">
             {STAGES.map((stage,index) => (
               <Link className={"stage-card stage-"+(index+1)} key={stage.id} href={"/resources?stage="+stage.id}>
@@ -52,8 +52,8 @@ export default function HomePage() {
       <section className="section resources-section">
         <div className="container">
           <div className="section-kicker"><BookOpen size={17}/> READY WHEN YOU ARE</div>
-          <div className="section-header"><div><h2>Less prep. <em>More “aha!”</em></h2><p>Our resource library is being rebuilt. New classroom activities will appear here when ready.</p></div><Link className="text-link" href="/resources">All resources <ArrowUpRight size={18}/></Link></div>
-          <div className="empty-state"><h3>New resources coming soon</h3><p>We are preparing a fresh classroom collection.</p></div>
+          <div className="section-header"><div><h2>Less prep. <em>More “aha!”</em></h2><p>Start with Clock Adventures, an interactive way to practise telling the time.</p></div><Link className="text-link" href="/resources">All resources <ArrowUpRight size={18}/></Link></div>
+          <div className="resource-grid"><Link href="/resources/clock-adventures" className="resource-card accent-purple"><div className="resource-top"><span className="resource-subject">Maths · Time</span><span className="round-arrow"><ArrowUpRight size={18}/></span></div><div className="resource-doodle">◷</div><h3>Clock Adventures</h3><p>Interactive analogue clock practice with printable progress reports.</p><div className="resource-footer"><span>KS1 · KS2</span><span>Years 1–6</span></div></Link></div>
         </div>
       </section>
 

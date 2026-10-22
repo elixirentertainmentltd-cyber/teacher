@@ -183,103 +183,23 @@ img{max-width:100%}
 @media(max-width:750px){.container{padding-left:20px;padding-right:20px}.header-inner{min-height:90px;flex-wrap:wrap;gap:0 10px;justify-content:center;padding-bottom:12px}.brand-link{width:165px;height:76px}.site-nav{width:100%;justify-content:center;font-size:13px;gap:24px}.nav-about{display:none}.hero-grid{grid-template-columns:1fr;gap:0;padding-top:45px}.hero-copy{text-align:center}.hero-copy h1{font-size:clamp(42px,9vw,58px);letter-spacing:-2px}.hero-lead{margin-left:auto;margin-right:auto;font-size:16px}.hero-actions,.hero-facts{justify-content:center}.hero-art{min-height:355px;margin-top:20px}.hero-mascot{max-height:360px}.float-one{right:0}.float-two{left:0}.section{padding:65px 0}.section-header{align-items:flex-start;flex-direction:column;gap:14px}.resource-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tools-highlight-inner{grid-template-columns:1fr}.tools-illustration{height:275px}.tools-highlight .tools-copy{text-align:center}.how-grid{grid-template-columns:1fr;gap:5px}.how-grid>div{padding:18px 0}.how-number{right:35%}.cta-inner{flex-direction:column;align-items:flex-start}.footer-main{flex-direction:column;gap:35px}.subject-label{margin-left:0}.worksheet-workspace{grid-template-columns:1fr}.worksheet-controls{position:static}.print-page{padding:24px;min-height:720px}.tools-grid{grid-template-columns:1fr}}
 @media(max-width:480px){.hero-actions .button{width:100%}.hero-facts{gap:11px}.hero-facts span{font-size:11px}.float-one,.float-two{font-size:10px;padding:9px}.stage-grid{gap:12px}.stage-card{padding:18px;min-height:220px}.stage-card strong{font-size:19px}.stage-caption{max-width:105px}.stage-arrow{right:10px;bottom:11px}.resource-grid{grid-template-columns:1fr}.resource-card{min-height:275px}.section-header h2,.tools-copy h2{font-size:36px}.print-page{padding:18px}.question-grid,.spelling-list,.answer-grid{grid-template-columns:1fr}.pupil-info{flex-wrap:wrap}.print-heading{flex-wrap:wrap}.tool-plate span{font-size:42px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
-@page{size:A4;margin:12mm}
-@media print{
-  body{background:#fff!important;color:#111!important}
-  .site-header,.footer,.worksheet-heading,.no-print,.worksheet-controls,.preview-after{display:none!important}
-  .worksheet-workspace,.container{display:block!important;width:100%!important;max-width:none!important;padding:0!important;margin:0!important}
-  .worksheet-preview-area{width:100%!important}
-  .print-page{width:100%!important;min-height:0!important;box-shadow:none!important;border:0!important;border-radius:0!important;padding:0!important;margin:0!important;break-after:page;page-break-after:always}
-  .print-page:last-of-type{break-after:auto;page-break-after:auto}
-  .question-grid,.spelling-list,.answer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .question-item,.answer-item{break-inside:avoid}
-}
 
-/* Consistent branding for every printable worksheet and teacher answer sheet. */
+/* Single consolidated A4 stylesheet: no footer-only overflow pages. */
 .print-page{display:flex;flex-direction:column}
-.print-foot{position:relative;display:flex;align-items:center;justify-content:center;min-height:65px;margin-top:auto;padding:14px 122px 0;border-top:1px solid #eeeaf4;color:#5e5677}
-.print-footer-title{font-size:11px;font-weight:800;text-align:center;line-height:1.35}
-.print-footer-logo{position:absolute;right:0;bottom:0;width:110px;height:56px;object-fit:contain;object-position:right bottom}
-@media(max-width:480px){.print-foot{padding-left:80px;padding-right:80px}.print-footer-logo{width:75px;height:43px}}
-@media print{
-  .print-page{display:flex!important;flex-direction:column!important;min-height:273mm!important;box-sizing:border-box;break-inside:avoid-page}
-  .print-foot{margin-top:auto!important;min-height:20mm;break-inside:avoid;padding-top:3mm}
-  .print-footer-logo{width:30mm;height:16mm;object-fit:contain}
-  .print-footer-title{font-size:9pt}
-}
-
-/* A4 printable pages, with enough clearance to avoid an overflow sheet. */
-@page{size:A4;margin:6mm 8mm}
-@media print{
-  html,body{width:auto!important;min-width:0!important;height:auto!important;margin:0!important;padding:0!important;background:#fff!important}
-  .site-header,.footer,.worksheet-heading,.no-print,.worksheet-controls,.preview-after{display:none!important}
-  .worksheet-workspace,.worksheet-preview-area,.container{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
-  .print-page{
-    display:flex!important;
-    flex-direction:column!important;
-    box-sizing:border-box!important;
-    width:100%!important;
-    height:280mm!important;
-    min-height:0!important;
-    padding:9mm 7mm 6mm!important;
-    margin:0!important;
-    border:0!important;
-    border-radius:0!important;
-    box-shadow:none!important;
-    break-after:page!important;
-    page-break-after:always!important;
-    break-inside:avoid!important;
-  }
-  .print-page:last-of-type{break-after:auto!important;page-break-after:auto!important}
-  .print-foot{margin-top:auto!important;flex-shrink:0!important;min-height:17mm!important;padding:3mm 32mm 0!important;break-inside:avoid!important}
-  .print-footer-logo{width:29mm!important;height:15mm!important;object-fit:contain!important}
-  .print-footer-title{font-size:9pt!important}
-  .question-item,.answer-item{break-inside:avoid!important}
-}
-
-/* Compact document footer and suppress non-print worksheet introduction. */
-.print-foot{min-height:42px;padding:8px 83px 0}
-.print-footer-title{font-size:9px;line-height:1.2}
-.print-footer-logo{width:75px;height:39px}
-@media print{
-  .worksheet-heading,.worksheet-heading.container{display:none!important}
-  .print-foot{min-height:11mm!important;padding:2mm 22mm 0!important}
-  .print-footer-title{font-size:7pt!important}
-  .print-footer-logo{width:20mm!important;height:10mm!important}
-}
-
-/* Repeat the compact footer on every printed sheet, including overflow pages. */
-@media print {
-  @page { size: A4; margin: 10mm 8mm 19mm; }
-  .print-page { height:auto!important; min-height:0!important; overflow:visible!important; break-inside:auto!important; padding:6mm 5mm 0!important; }
-  .print-foot { position:fixed!important; left:13mm!important; right:13mm!important; bottom:5mm!important; height:10mm!important; min-height:0!important; margin:0!important; padding:1mm 23mm 0!important; background:white!important; z-index:9999!important; }
-  .print-footer-logo { width:20mm!important; height:9mm!important; }
-  .print-footer-title { font-size:7pt!important; }
-  .print-page:not(:first-of-type) .print-foot { display:none!important; }
-}
-
-/* The global footer is outside the worksheet flow so it repeats on every paper page. */
+.print-foot{position:relative;display:flex;align-items:center;justify-content:center;min-height:42px;margin-top:auto;padding:8px 83px 0;border-top:1px solid #eeeaf4;color:#5e5677}
+.print-footer-title{font-size:9px;line-height:1.2;text-align:center}
+.print-footer-logo{position:absolute;right:0;bottom:0;width:75px;height:39px;object-fit:contain}
 .print-global-footer{display:none}
+@page{size:A4;margin:0}
 @media print{
-  .print-page .print-foot{display:none!important}
-  .print-global-footer{
-    display:flex!important;
-    position:fixed!important;
-    left:5mm!important;
-    right:5mm!important;
-    bottom:-13mm!important;
-    height:10mm!important;
-    padding:0 23mm!important;
-    margin:0!important;
-    box-sizing:border-box!important;
-    justify-content:center!important;
-    align-items:center!important;
-    border-top:1px solid #eeeaf4!important;
-    background:#fff!important;
-    z-index:9999!important;
-    color:#5e5677!important;
-    font-size:7pt!important;
-    font-weight:800!important;
-  }
-  .print-global-footer img{position:absolute!important;right:0!important;bottom:0!important;width:20mm!important;height:9mm!important;object-fit:contain!important}
+ html,body{margin:0!important;padding:0!important;width:auto!important;height:auto!important;background:white!important;color:#111!important}
+ .site-header,.footer,.worksheet-heading,.no-print,.worksheet-controls,.preview-after{display:none!important}
+ .worksheet-workspace,.worksheet-preview-area,.container{display:block!important;width:100%!important;max-width:none!important;padding:0!important;margin:0!important}
+ .print-page{box-sizing:border-box!important;display:block!important;width:100%!important;height:auto!important;min-height:0!important;overflow:visible!important;margin:0!important;padding:15mm 14mm 24mm!important;border:0!important;border-radius:0!important;box-shadow:none!important;break-after:page!important;page-break-after:always!important}
+ .print-page:last-of-type{break-after:auto!important;page-break-after:auto!important}
+ .print-page .print-foot{display:none!important}
+ .question-grid,.spelling-list,.answer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .question-item,.answer-item{break-inside:avoid!important}
+ .print-global-footer{position:fixed!important;display:flex!important;box-sizing:border-box!important;left:14mm!important;right:14mm!important;bottom:8mm!important;height:12mm!important;padding:2mm 22mm 0!important;align-items:center!important;justify-content:center!important;border-top:1px solid #eeeaf4!important;background:#fff!important;color:#5e5677!important;font-size:7pt!important;font-weight:800!important;z-index:50!important}
+ .print-global-footer img{position:absolute!important;right:0!important;bottom:0!important;width:20mm!important;height:9mm!important;object-fit:contain!important}
 }
