@@ -208,24 +208,31 @@ img{max-width:100%}
   .print-footer-title{font-size:9pt}
 }
 
-/* Print-safe A4 output: reserve our own page margins and suppress browser margin headers where supported. */
-@page{size:A4;margin:0}
+/* A4 printable pages, with enough clearance to avoid an overflow sheet. */
+@page{size:A4;margin:6mm 8mm}
 @media print{
-  html,body{margin:0!important;padding:0!important;width:210mm!important;background:white!important}
+  html,body{width:auto!important;min-width:0!important;height:auto!important;margin:0!important;padding:0!important;background:#fff!important}
+  .site-header,.footer,.worksheet-heading,.no-print,.worksheet-controls,.preview-after{display:none!important}
+  .worksheet-workspace,.worksheet-preview-area,.container{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
   .print-page{
-    box-sizing:border-box!important;
-    width:210mm!important;
-    min-height:297mm!important;
-    padding:15mm 14mm 14mm!important;
-    margin:0!important;
-    box-shadow:none!important;
-    border:0!important;
     display:flex!important;
     flex-direction:column!important;
-    break-after:page;
-    page-break-after:always;
-    break-inside:auto!important;
+    box-sizing:border-box!important;
+    width:100%!important;
+    height:280mm!important;
+    min-height:0!important;
+    padding:9mm 7mm 6mm!important;
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    break-after:page!important;
+    page-break-after:always!important;
+    break-inside:avoid!important;
   }
   .print-page:last-of-type{break-after:auto!important;page-break-after:auto!important}
-  .print-foot{margin-top:auto!important;flex-shrink:0!important;break-inside:avoid!important}
+  .print-foot{margin-top:auto!important;flex-shrink:0!important;min-height:17mm!important;padding:3mm 32mm 0!important;break-inside:avoid!important}
+  .print-footer-logo{width:29mm!important;height:15mm!important;object-fit:contain!important}
+  .print-footer-title{font-size:9pt!important}
+  .question-item,.answer-item{break-inside:avoid!important}
 }
