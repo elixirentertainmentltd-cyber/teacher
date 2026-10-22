@@ -49,8 +49,10 @@ export default function ClockLiteracy() {
   function start(){setQuestions(createQuestions(level,length));setIndex(0);setChoices([]);setPicked(null);}
   function next(){if(picked===null)return;setChoices(prev=>[...prev,picked]);setPicked(null);setIndex(v=>v+1);}
   return <main className="container" style={{paddingTop:40,paddingBottom:90}}>
-    <Link href="/resources?stage=KS1" className="back-link"><ArrowLeft size={18}/> Back to resources</Link>
-    <div className="section-kicker"><Clock3 size={17}/> INTERACTIVE LEARNING</div>
+    <div className="clock-page-intro">
+      <Link href="/resources?stage=KS1" className="back-link"><ArrowLeft size={18}/> Back to resources</Link>
+      <div className="section-kicker"><Clock3 size={17}/> INTERACTIVE LEARNING</div>
+    </div>
     <h1 style={{fontSize:"clamp(36px,5vw,60px)",margin:"12px 0",color:"#302653"}}>Clock adventures<span style={{color:"#e364a1"}}>.</span></h1>
     <p style={{color:"#77738a",maxWidth:680,lineHeight:1.6}}>Learn to tell the time with Teach Me a Lesson. Choose a level, practise with an analogue clock, and print a progress report for your teacher.</p>
     {!questions.length?<section className="interactive-tool" style={{maxWidth:700,marginTop:24}}>
@@ -74,6 +76,6 @@ export default function ClockLiteracy() {
       {picked!==null&&<p role="status" style={{fontWeight:800,marginTop:20}}>{picked===current.correct?"Well done!":"Good try! The answer is "+label(current.hour,current.minute)+"."}</p>}
       <button className="button button-primary" style={{marginTop:20}} disabled={picked===null} onClick={next}>{index===questions.length-1?"See my results":"Next question"} <ArrowRight size={17}/></button></div>
     </section>}
-    <style jsx>{` .clock-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px auto;max-width:420px}.clock-choice{border:2px solid #e8e3f0;border-radius:18px;background:#fff;padding:8px}.clock-choice.chosen{border-color:#7658cc;background:#f4efff}.clock-print-report{display:none}.clock-report-footer{display:flex;align-items:center;justify-content:center;position:relative;border-top:1px solid #ddd;padding-top:9px;margin-top:24px;font-size:9px}.clock-report-footer img{position:absolute;right:0;bottom:0;object-fit:contain}@media print{.no-print{display:none!important}.clock-print-report{display:block!important}.clock-report-footer{break-inside:avoid}}`}</style>
+    <style jsx>{` .clock-page-intro{display:flex;align-items:center;gap:28px;flex-wrap:wrap;margin-bottom:26px}.clock-page-intro .back-link{display:inline-flex;align-items:center;gap:9px}.clock-page-intro .section-kicker{display:inline-flex;align-items:center;gap:9px;margin:0}@media(max-width:560px){.clock-page-intro{gap:12px 22px}}  .clock-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px auto;max-width:420px}.clock-choice{border:2px solid #e8e3f0;border-radius:18px;background:#fff;padding:8px}.clock-choice.chosen{border-color:#7658cc;background:#f4efff}.clock-print-report{display:none}.clock-report-footer{display:flex;align-items:center;justify-content:center;position:relative;border-top:1px solid #ddd;padding-top:9px;margin-top:24px;font-size:9px}.clock-report-footer img{position:absolute;right:0;bottom:0;object-fit:contain}@media print{.no-print{display:none!important}.clock-print-report{display:block!important}.clock-report-footer{break-inside:avoid}}`}</style>
   </main>;
 }
