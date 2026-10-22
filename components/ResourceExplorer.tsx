@@ -43,7 +43,7 @@ export default function ResourceExplorer({ initialStage }: { initialStage: Filte
           {results.length ? <div className="resource-grid library-grid">
             {results.map((item,index)=><Link key={item.slug} href={item.type==="Interactive activity" ? "/resources/"+item.slug : "/worksheet/"+item.slug} className={"resource-card accent-"+item.colour}>
               <div className="resource-top"><span className="resource-subject">{item.subject}</span><span className="round-arrow"><ArrowUpRight size={18}/></span></div>
-              <div className="resource-doodle">{({ "number-bonds":"10", "addition-subtraction":"➕", "spelling":"Aa", "times-tables":"×", "punctuation":"?!", "fractions":"½", "percentages":"%", "algebra":"x²" } as Record<string,string>)[item.slug] || (item.slug==="clock-adventures" ? "◷" : "✎")}</div>
+              <div className="resource-doodle">{({ "number-bonds":"10", "addition-subtraction":"➕", "spelling":"Aa", "times-tables":"×", "punctuation":"?!", "fractions":"½", "percentages":"%", "algebra":"x²" } as Record<string,string>)[item.slug] || (item.slug==="clock-adventures" ? "◷" : item.slug==="everyday-sound-lab" ? "♫" : "✎")}</div>
               <h3>{item.title}</h3><p>{item.description}</p>
               <div className="resource-footer"><span>{item.stages.join(" · ")}</span><span>{item.years}</span></div>
             </Link>)}
