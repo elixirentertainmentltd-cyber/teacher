@@ -194,3 +194,16 @@ img{max-width:100%}
   .question-grid,.spelling-list,.answer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .question-item,.answer-item{break-inside:avoid}
 }
+
+/* Consistent branding for every printable worksheet and teacher answer sheet. */
+.print-page{display:flex;flex-direction:column}
+.print-foot{position:relative;display:flex;align-items:center;justify-content:center;min-height:65px;margin-top:auto;padding:14px 122px 0;border-top:1px solid #eeeaf4;color:#5e5677}
+.print-footer-title{font-size:11px;font-weight:800;text-align:center;line-height:1.35}
+.print-footer-logo{position:absolute;right:0;bottom:0;width:110px;height:56px;object-fit:contain;object-position:right bottom}
+@media(max-width:480px){.print-foot{padding-left:80px;padding-right:80px}.print-footer-logo{width:75px;height:43px}}
+@media print{
+  .print-page{display:flex!important;flex-direction:column!important;min-height:273mm!important;box-sizing:border-box;break-inside:avoid-page}
+  .print-foot{margin-top:auto!important;min-height:20mm;break-inside:avoid;padding-top:3mm}
+  .print-footer-logo{width:30mm;height:16mm;object-fit:contain}
+  .print-footer-title{font-size:9pt}
+}
