@@ -236,3 +236,14 @@ img{max-width:100%}
   .print-footer-title{font-size:9pt!important}
   .question-item,.answer-item{break-inside:avoid!important}
 }
+
+/* Compact document footer and suppress non-print worksheet introduction. */
+.print-foot{min-height:42px;padding:8px 83px 0}
+.print-footer-title{font-size:9px;line-height:1.2}
+.print-footer-logo{width:75px;height:39px}
+@media print{
+  .worksheet-heading,.worksheet-heading.container{display:none!important}
+  .print-foot{min-height:11mm!important;padding:2mm 22mm 0!important}
+  .print-footer-title{font-size:7pt!important}
+  .print-footer-logo{width:20mm!important;height:10mm!important}
+}
