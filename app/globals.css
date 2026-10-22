@@ -247,3 +247,39 @@ img{max-width:100%}
   .print-footer-title{font-size:7pt!important}
   .print-footer-logo{width:20mm!important;height:10mm!important}
 }
+
+/* Repeat the compact footer on every printed sheet, including overflow pages. */
+@media print {
+  @page { size: A4; margin: 10mm 8mm 19mm; }
+  .print-page { height:auto!important; min-height:0!important; overflow:visible!important; break-inside:auto!important; padding:6mm 5mm 0!important; }
+  .print-foot { position:fixed!important; left:13mm!important; right:13mm!important; bottom:5mm!important; height:10mm!important; min-height:0!important; margin:0!important; padding:1mm 23mm 0!important; background:white!important; z-index:9999!important; }
+  .print-footer-logo { width:20mm!important; height:9mm!important; }
+  .print-footer-title { font-size:7pt!important; }
+  .print-page:not(:first-of-type) .print-foot { display:none!important; }
+}
+
+/* The global footer is outside the worksheet flow so it repeats on every paper page. */
+.print-global-footer{display:none}
+@media print{
+  .print-page .print-foot{display:none!important}
+  .print-global-footer{
+    display:flex!important;
+    position:fixed!important;
+    left:5mm!important;
+    right:5mm!important;
+    bottom:-13mm!important;
+    height:10mm!important;
+    padding:0 23mm!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    justify-content:center!important;
+    align-items:center!important;
+    border-top:1px solid #eeeaf4!important;
+    background:#fff!important;
+    z-index:9999!important;
+    color:#5e5677!important;
+    font-size:7pt!important;
+    font-weight:800!important;
+  }
+  .print-global-footer img{position:absolute!important;right:0!important;bottom:0!important;width:20mm!important;height:9mm!important;object-fit:contain!important}
+}

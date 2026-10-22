@@ -56,6 +56,14 @@ export function makeQuestions(slug: string, seed: number, amount: number, select
       const offset = b >= 0 ? " + " + b : " − " + Math.abs(b);
       return {prompt: "Solve: " + a + "x" + offset + " = " + total, answer: "x = " + x};
     }
-    return {prompt: "Practise your skills", answer: ""};
+    const topic = slug.replace(/^ks[1-4]-/,"").replace(/-/g," ");
+    const verbs = [
+      "Explain what you already know about ",
+      "Give or draw a clear example of ",
+      "Create a short activity or question involving ",
+      "Explain how you would check or improve your work on "
+    ];
+    const index = rand(0,3);
+    return { prompt: verbs[index] + topic + ".", answer: "Open response. Review with the learner and adapt to their support needs." };
   });
 }

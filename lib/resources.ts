@@ -1,5 +1,6 @@
+import { TOPICS } from "./curriculum-topics";
 export type Stage = "KS1" | "KS2" | "KS3" | "KS4";
-export type Subject = "Maths" | "English";
+export type Subject = "Maths" | "English" | "Science" | "Reading & Writing" | "Speech & Language" | "Life Skills" | "Special Education";
 export type Resource = {
   slug: string; title: string; description: string; subject: Subject;
   stages: Stage[]; years: string; type: "Printable worksheet"; category: string;
@@ -21,4 +22,16 @@ export const RESOURCES: Resource[] = [
   { slug: "percentages", title: "Percentage practice", description: "Work through familiar percentages of amounts with solutions.", subject: "Maths", stages: ["KS3", "KS4"], years: "Years 7–11", type: "Printable worksheet", category: "Number", colour: "yellow" },
   { slug: "algebra", title: "Solve for x", description: "One-step and two-step linear equations for GCSE preparation.", subject: "Maths", stages: ["KS3", "KS4"], years: "Years 9–11", type: "Printable worksheet", category: "Algebra", colour: "purple" },
 ];
+const SUBJECTS: Subject[] = ["Maths","Science","Reading & Writing","Speech & Language","Life Skills","Special Education"];
+const COLOURS: Resource["colour"][] = ["yellow","mint","purple","blue","coral","pink"];
+for (const stage of STAGES) {
+  TOPICS[stage.id].forEach((topics, subjectIndex) => topics.forEach(title => {
+    RESOURCES.push({
+      slug: stage.id.toLowerCase() + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/-$/,""),
+      title, description: "A structured " + SUBJECTS[subjectIndex].toLowerCase() + " activity exploring " + title.toLowerCase() + ".",
+      subject: SUBJECTS[subjectIndex], stages: [stage.id], years: stage.years,
+      type: "Printable worksheet", category: SUBJECTS[subjectIndex], colour: COLOURS[subjectIndex]
+    });
+  }));
+}
 export function findResource(slug: string) { return RESOURCES.find(resource => resource.slug === slug); }
