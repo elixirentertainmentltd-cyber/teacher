@@ -52,13 +52,14 @@ export default function ActivityBuilder({ resource }: { resource: Resource }) {
                 </div>
               </div>)}
             </div> : <p className="no-words">Add at least one word in the options to create your spelling sheet.</p>}
-            <div className="print-foot"><span>Keep practising. You’ve got this!</span><span>Teach Me a Lesson · We Are Elixir</span></div>
+            <div className="print-foot"><span className="print-footer-title">Teach Me A Lesson By We Are Elixir</span><img className="print-footer-logo" src="/brand/teach-me-a-lesson-logo.png" alt="Teach Me a Lesson logo" width="110" height="56" /></div>
           </article>
           {answers && !isSpelling && <article className="print-page answer-paper">
             <div className="print-heading"><div className="worksheet-brand"><strong>Teach Me a Lesson<span>.</span></strong><small>by We Are Elixir</small></div><div className="worksheet-tag">Teacher copy</div></div>
             <h2>{resource.title} · Answers</h2>
             <div className="answer-grid">{questions.map((question,index)=><div className="answer-item" key={index}><b>{index+1}.</b> <span>{question.answer}</span></div>)}</div>
             <p className="answer-foot">Teacher answer key. Review before sharing.</p>
+            <div className="print-foot"><span className="print-footer-title">Teach Me A Lesson By We Are Elixir</span><img className="print-footer-logo" src="/brand/teach-me-a-lesson-logo.png" alt="Teach Me a Lesson logo" width="110" height="56" /></div>
           </article>}
           <div className="preview-after no-print"><Link href="/resources">More classroom resources <ArrowRight size={17}/></Link></div>
         </div>
