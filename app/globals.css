@@ -207,3 +207,25 @@ img{max-width:100%}
   .print-footer-logo{width:30mm;height:16mm;object-fit:contain}
   .print-footer-title{font-size:9pt}
 }
+
+/* Print-safe A4 output: reserve our own page margins and suppress browser margin headers where supported. */
+@page{size:A4;margin:0}
+@media print{
+  html,body{margin:0!important;padding:0!important;width:210mm!important;background:white!important}
+  .print-page{
+    box-sizing:border-box!important;
+    width:210mm!important;
+    min-height:297mm!important;
+    padding:15mm 14mm 14mm!important;
+    margin:0!important;
+    box-shadow:none!important;
+    border:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    break-after:page;
+    page-break-after:always;
+    break-inside:auto!important;
+  }
+  .print-page:last-of-type{break-after:auto!important;page-break-after:auto!important}
+  .print-foot{margin-top:auto!important;flex-shrink:0!important;break-inside:avoid!important}
+}
