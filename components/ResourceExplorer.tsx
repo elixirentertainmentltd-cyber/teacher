@@ -27,7 +27,7 @@ export default function ResourceExplorer({ initialStage }: { initialStage: Filte
       <section className="section library-section">
         <div className="container">
           <div className="filters-panel">
-            <label className="search-box"><Search size={21}/><span className="sr-only">Search resources</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Try “spelling”, “fractions” or “algebra”…"/></label>
+            <label className="search-box"><Search size={21}/><span className="sr-only">Search resources</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search upcoming resources…"/></label>
             <div className="filter-row">
               <div className="filter-label"><SlidersHorizontal size={17}/> Key Stage</div>
               <div className="filter-pills" role="group" aria-label="Filter by Key Stage">
@@ -39,7 +39,7 @@ export default function ResourceExplorer({ initialStage }: { initialStage: Filte
               </div>
             </div>
           </div>
-          <div className="results-bar"><strong>{results.length} {results.length===1?"resource":"resources"}</strong><span>Each opens a printable starter activity you can customise.</span></div>
+          <div className="results-bar"><strong>{results.length} {results.length===1?"resource":"resources"}</strong><span>Resources will appear here as they are published.</span></div>
           {results.length ? <div className="resource-grid library-grid">
             {results.map((item,index)=><Link key={item.slug} href={"/worksheet/"+item.slug} className={"resource-card accent-"+item.colour}>
               <div className="resource-top"><span className="resource-subject">{item.subject}</span><span className="round-arrow"><ArrowUpRight size={18}/></span></div>
@@ -47,7 +47,7 @@ export default function ResourceExplorer({ initialStage }: { initialStage: Filte
               <h3>{item.title}</h3><p>{item.description}</p>
               <div className="resource-footer"><span>{item.stages.join(" · ")}</span><span>{item.years}</span></div>
             </Link>)}
-          </div> : <div className="empty-state"><span className="empty-emoji">🔎</span><h2>Nothing in this corner of the classroom yet.</h2><p>Try another subject, Key Stage or search phrase.</p><button className="button button-primary" onClick={reset}>Clear filters <X size={17}/></button></div>}
+          </div> : <div className="empty-state"><span className="empty-emoji">🔎</span><h2>No resources published yet.</h2><p>We are rebuilding the library. Please check back later.</p><button className="button button-primary" onClick={reset}>Clear filters <X size={17}/></button></div>}
           <div className="library-note"><strong>A note for teachers:</strong> These are original, starter practice activities, not an officially endorsed exam-board collection. Please review suitability for your class and specification.</div>
         </div>
       </section>
