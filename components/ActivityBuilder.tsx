@@ -32,7 +32,7 @@ export default function ActivityBuilder({ resource }: { resource: Resource }) {
           {!isSpelling && !isPunctuation && <button className="button button-outline controls-button" onClick={()=>setSeed(value=>value+1)}><RefreshCw size={17}/> New questions</button>}
           {!isSpelling && <button className="button button-outline controls-button" onClick={()=>setAnswers(value=>!value)}>{answers?<EyeOff size={17}/>:<Eye size={17}/>} {answers?"Hide answer key":"Show answer key"}</button>}
           <button className="button button-primary controls-button" onClick={()=>window.print()}><Printer size={18}/> Print / Save as PDF</button>
-          <p className="controls-hint">Use your browser's print menu and choose “Save as PDF” to download a copy.</p>
+          <p className="controls-hint">Choose “Save as PDF” in the print menu. Turn off “Headers and footers” if your browser offers it to avoid adding dates, URLs or page numbers.</p>
         </div>
         <div className="worksheet-preview-area">
           <div className="preview-label no-print"><span>YOUR WORKSHEET PREVIEW</span><span>Ready for A4 printing <Check size={16}/></span></div>
