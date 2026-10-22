@@ -12,11 +12,11 @@ export default function HomePage() {
             <h1>Great lessons.<br/><span className="hero-marker">Less legwork.</span></h1>
             <p className="hero-lead">Worksheets, clever classroom tools and little sparks of inspiration for teachers who already have enough on their plates.</p>
             <div className="hero-actions">
-              <Link className="button button-primary" href="/resources">Explore free resources <ArrowRight size={19}/></Link>
+              <Link className="button button-primary" href="/resources">Browse resource library <ArrowRight size={19}/></Link>
               <Link className="button button-outline" href="/tools">Try teacher tools <WandSparkles size={18}/></Link>
             </div>
             <div className="hero-facts">
-              <span><CheckCircle2 size={18}/> KS1 to KS4</span><span><CheckCircle2 size={18}/> Made for UK teachers</span><span><CheckCircle2 size={18}/> Print and use</span>
+              <span><CheckCircle2 size={18}/> KS1 to KS4</span><span><CheckCircle2 size={18}/> Made for UK teachers</span><span><CheckCircle2 size={18}/> New resources coming soon</span>
             </div>
           </div>
           <div className="hero-art" aria-label="Teachrex, the Teach Me a Lesson mascot">
@@ -33,7 +33,7 @@ export default function HomePage() {
       <section className="section stage-section">
         <div className="container">
           <div className="section-kicker"><Sparkles size={17}/> SOMETHING FOR EVERY STAGE</div>
-          <div className="section-header"><div><h2>Find your happy place<br/><em>in the classroom.</em></h2><p>From first phonics and number bonds to secondary maths and GCSE practice.</p></div><Link className="text-link" href="/resources">Browse everything <ArrowUpRight size={18}/></Link></div>
+          <div className="section-header"><div><h2>Find your happy place<br/><em>in the classroom.</em></h2><p>The library is clear and ready for a fresh collection across all four Key Stages.</p></div><Link className="text-link" href="/resources">Browse everything <ArrowUpRight size={18}/></Link></div>
           <div className="stage-grid">
             {STAGES.map((stage,index) => (
               <Link className={"stage-card stage-"+(index+1)} key={stage.id} href={"/resources?stage="+stage.id}>
@@ -67,10 +67,10 @@ export default function HomePage() {
       <section className="section how-section" id="how-it-works">
         <div className="container">
           <div className="section-kicker"><Heart size={17}/> SIMPLE BY DESIGN</div>
-          <div className="section-header"><div><h2>A little easier, <em>every day.</em></h2><p>No complicated setup. Just classroom-ready starting points.</p></div></div>
+          <div className="section-header"><div><h2>A little easier, <em>every day.</em></h2><p>We are building a new range of easy-to-use classroom resources.</p></div></div>
           <div className="how-grid">
             <div><div className="how-icon purple"><Search size={25}/></div><span className="how-number">01</span><h3>Find it</h3><p>Search by Key Stage or subject to find something useful.</p></div>
-            <div><div className="how-icon pink"><ClipboardList size={25}/></div><span className="how-number">02</span><h3>Make it yours</h3><p>Refresh maths questions or add your own spelling words.</p></div>
+            <div><div className="how-icon pink"><ClipboardList size={25}/></div><span className="how-number">02</span><h3>Make it yours</h3><p>Customise activities when new resources are available.</p></div>
             <div><div className="how-icon green"><Printer size={25}/></div><span className="how-number">03</span><h3>Teach it</h3><p>Print the worksheet or save it as a PDF from your browser.</p></div>
           </div>
         </div>
