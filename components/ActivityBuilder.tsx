@@ -32,7 +32,7 @@ export default function ActivityBuilder({ resource }: { resource: Resource }) {
           {!isSpelling && !isPunctuation && <button className="button button-outline controls-button" onClick={()=>setSeed(value=>value+1)}><RefreshCw size={17}/> New questions</button>}
           {!isSpelling && <button className="button button-outline controls-button" onClick={()=>setAnswers(value=>!value)}>{answers?<EyeOff size={17}/>:<Eye size={17}/>} {answers?"Hide answer key":"Show answer key"}</button>}
           <button className="button button-primary controls-button" onClick={()=>window.print()}><Printer size={18}/> Print / Save as PDF</button>
-          <p className="controls-hint">Use your browser's print menu and choose “Save as PDF” to download a copy.</p>
+          <p className="controls-hint">Choose “Save as PDF” in the print menu. Turn off “Headers and footers” if your browser offers it to avoid adding dates, URLs or page numbers.</p>
         </div>
         <div className="worksheet-preview-area">
           <div className="preview-label no-print"><span>YOUR WORKSHEET PREVIEW</span><span>Ready for A4 printing <Check size={16}/></span></div>
@@ -52,13 +52,14 @@ export default function ActivityBuilder({ resource }: { resource: Resource }) {
                 </div>
               </div>)}
             </div> : <p className="no-words">Add at least one word in the options to create your spelling sheet.</p>}
-            <div className="print-foot"><span>Keep practising. You’ve got this!</span><span>Teach Me a Lesson · We Are Elixir</span></div>
+            <div className="print-foot"><span className="print-footer-title">Teach Me A Lesson By We Are Elixir</span><img className="print-footer-logo" src="/brand/teach-me-a-lesson-logo.png" alt="Teach Me a Lesson logo" width="110" height="56" /></div>
           </article>
           {answers && !isSpelling && <article className="print-page answer-paper">
             <div className="print-heading"><div className="worksheet-brand"><strong>Teach Me a Lesson<span>.</span></strong><small>by We Are Elixir</small></div><div className="worksheet-tag">Teacher copy</div></div>
             <h2>{resource.title} · Answers</h2>
             <div className="answer-grid">{questions.map((question,index)=><div className="answer-item" key={index}><b>{index+1}.</b> <span>{question.answer}</span></div>)}</div>
             <p className="answer-foot">Teacher answer key. Review before sharing.</p>
+            <div className="print-foot"><span className="print-footer-title">Teach Me A Lesson By We Are Elixir</span><img className="print-footer-logo" src="/brand/teach-me-a-lesson-logo.png" alt="Teach Me a Lesson logo" width="110" height="56" /></div>
           </article>}
           <div className="preview-after no-print"><Link href="/resources">More classroom resources <ArrowRight size={17}/></Link></div>
         </div>
