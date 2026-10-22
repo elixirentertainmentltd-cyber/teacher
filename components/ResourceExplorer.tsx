@@ -2,12 +2,12 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, ArrowUpRight, BookOpen, Search, SlidersHorizontal, X } from "lucide-react";
-import { RESOURCES, STAGES, type Stage } from "@/lib/resources";
+import { RESOURCES, STAGES, type Stage, type Subject } from "@/lib/resources";
 
 type Filter = "All" | Stage;
 export default function ResourceExplorer({ initialStage }: { initialStage: Filter }) {
   const [stage, setStage] = useState<Filter>(initialStage);
-  const [subject, setSubject] = useState<"All" | "Maths" | "English">("All");
+  const [subject, setSubject] = useState<"All" | Subject>("All");
   const [query, setQuery] = useState("");
   const results = useMemo(() => RESOURCES.filter(item =>
     (stage === "All" || item.stages.includes(stage)) &&
@@ -21,7 +21,7 @@ export default function ResourceExplorer({ initialStage }: { initialStage: Filte
         <div className="container">
           <span className="section-kicker"><BookOpen size={17}/> THE RESOURCE LIBRARY</span>
           <h1>Something brilliant for<br/><span>your next lesson.</span></h1>
-          <p>Find printable activities for English and maths, from the first years of primary school through to GCSE-stage practice.</p>
+          <p>Find printable activities for maths, science, reading and writing, speech and language, life skills and SEND, from the first years of primary school through to GCSE-stage practice.</p>
         </div>
       </section>
       <section className="section library-section">
@@ -35,15 +35,15 @@ export default function ResourceExplorer({ initialStage }: { initialStage: Filte
               </div>
               <div className="filter-label subject-label">Subject</div>
               <div className="filter-pills" role="group" aria-label="Filter by subject">
-                {(["All","Maths","English"] as const).map(value=><button key={value} type="button" className={subject===value?"pill active":"pill"} onClick={()=>setSubject(value)} aria-pressed={subject===value}>{value}</button>)}
+                {(["All","Maths","English","Science","Reading & Writing","Speech & Language","Life Skills","Special Education"] as const).map(value=><button key={value} type="button" className={subject===value?"pill active":"pill"} onClick={()=>setSubject(value)} aria-pressed={subject===value}>{value}</button>)}
               </div>
             </div>
           </div>
-          <div className="results-bar"><strong>{results.length} {results.length===1?"resource":"resources"}</strong><span>Each opens a printable activity you can customise.</span></div>
+          <div className="results-bar"><strong>{results.length} {results.length===1?"resource":"resources"}</strong><span>Each opens a printable starter activity you can customise.</span></div>
           {results.length ? <div className="resource-grid library-grid">
             {results.map((item,index)=><Link key={item.slug} href={"/worksheet/"+item.slug} className={"resource-card accent-"+item.colour}>
               <div className="resource-top"><span className="resource-subject">{item.subject}</span><span className="round-arrow"><ArrowUpRight size={18}/></span></div>
-              <div className="resource-doodle">{({ "number-bonds":"10", "addition-subtraction":"➕", "spelling":"Aa", "times-tables":"×", "punctuation":"?!", "fractions":"½", "percentages":"%", "algebra":"x²" } as Record<string,string>)[item.slug]}</div>
+              <div className="resource-doodle">{({ "number-bonds":"10", "addition-subtraction":"➕", "spelling":"Aa", "times-tables":"×", "punctuation":"?!", "fractions":"½", "percentages":"%", "algebra":"x²" } as Record<string,string>)[item.slug] || "✎"}</div>
               <h3>{item.title}</h3><p>{item.description}</p>
               <div className="resource-footer"><span>{item.stages.join(" · ")}</span><span>{item.years}</span></div>
             </Link>)}
