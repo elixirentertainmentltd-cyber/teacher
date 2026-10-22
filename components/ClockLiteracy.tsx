@@ -49,7 +49,7 @@ export default function ClockLiteracy() {
   function start(){setQuestions(createQuestions(level,length));setIndex(0);setChoices([]);setPicked(null);}
   function next(){if(picked===null)return;setChoices(prev=>[...prev,picked]);setPicked(null);setIndex(v=>v+1);}
   return <main className="container" style={{paddingTop:40,paddingBottom:90}}>
-    <Link href="/tools" className="back-link"><ArrowLeft size={18}/> Back to classroom tools</Link>
+    <Link href="/resources?stage=KS1" className="back-link"><ArrowLeft size={18}/> Back to resources</Link>
     <div className="section-kicker"><Clock3 size={17}/> INTERACTIVE LEARNING</div>
     <h1 style={{fontSize:"clamp(36px,5vw,60px)",margin:"12px 0",color:"#302653"}}>Clock adventures<span style={{color:"#e364a1"}}>.</span></h1>
     <p style={{color:"#77738a",maxWidth:680,lineHeight:1.6}}>Learn to tell the time with Teach Me a Lesson. Choose a level, practise with an analogue clock, and print a progress report for your teacher.</p>
