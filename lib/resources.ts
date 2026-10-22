@@ -12,6 +12,7 @@ export const STAGES: { id: Stage; label: string; years: string; caption: string 
   { id: "KS4", label: "Key Stage 4", years: "Years 10–11", caption: "GCSE-ready practice" },
 ];
 export const RESOURCES: Resource[] = [
+  { slug:"everyday-sound-lab", title:"Everyday Sound Lab", description:"Explore familiar everyday sounds, match sounds to objects and build your own sound scenes.", subject:"Science", stages:["KS1","KS2"], years:"Years 1–6", type:"Interactive activity", category:"Sound and listening", colour:"mint" },
   { slug:"clock-adventures", title:"Clock Adventures", description:"Practise telling the time on analogue clocks in interactive rounds, with printable progress reports.", subject:"Maths", stages:["KS1","KS2"], years:"Years 1–6", type:"Interactive activity", category:"Time", colour:"purple" }
 ];
 export function findResource(slug: string) { return RESOURCES.find(resource => resource.slug === slug); }
