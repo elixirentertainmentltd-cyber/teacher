@@ -52,17 +52,8 @@ export default function HomePage() {
       <section className="section resources-section">
         <div className="container">
           <div className="section-kicker"><BookOpen size={17}/> READY WHEN YOU ARE</div>
-          <div className="section-header"><div><h2>Less prep. <em>More “aha!”</em></h2><p>Start with a worksheet, customise the questions, then print it for your class.</p></div><Link className="text-link" href="/resources">All resources <ArrowUpRight size={18}/></Link></div>
-          <div className="resource-grid">
-            {RESOURCES.slice(0,6).map((item,i)=>(
-              <Link key={item.slug} href={"/worksheet/"+item.slug} className={"resource-card accent-"+item.colour}>
-                <div className="resource-top"><span className="resource-subject">{item.subject}</span><span className="round-arrow"><ArrowUpRight size={18}/></span></div>
-                <div className="resource-doodle">{["✏","➕","Aa","×","?!","½"][i]}</div>
-                <h3>{item.title}</h3><p>{item.description}</p>
-                <div className="resource-footer"><span>{item.stages.join(" · ")}</span><span>{item.years}</span></div>
-              </Link>
-            ))}
-          </div>
+          <div className="section-header"><div><h2>Less prep. <em>More “aha!”</em></h2><p>Our resource library is being rebuilt. New classroom activities will appear here when ready.</p></div><Link className="text-link" href="/resources">All resources <ArrowUpRight size={18}/></Link></div>
+          <div className="empty-state"><h3>New resources coming soon</h3><p>We are preparing a fresh classroom collection.</p></div>
         </div>
       </section>
 
