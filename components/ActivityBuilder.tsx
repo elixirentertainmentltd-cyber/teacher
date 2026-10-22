@@ -36,6 +36,7 @@ export default function ActivityBuilder({ resource }: { resource: Resource }) {
         </div>
         <div className="worksheet-preview-area">
           <div className="preview-label no-print"><span>YOUR WORKSHEET PREVIEW</span><span>Ready for A4 printing <Check size={16}/></span></div>
+          <div className="print-global-footer" aria-hidden="true"><span>Teach Me A Lesson By We Are Elixir</span><img src="/brand/teach-me-a-lesson-logo.png" alt="" width="75" height="39" /></div>
           <article className="print-page">
             <div className="print-heading">
               <div className="worksheet-brand"><strong>Teach Me a Lesson<span>.</span></strong><small>by We Are Elixir</small></div>
