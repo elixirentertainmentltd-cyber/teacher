@@ -257,3 +257,20 @@ img{max-width:100%}
 .admin-message{background:#fff5da;border-radius:12px;padding:14px}
 .footer-bottom a{text-decoration:underline;text-underline-offset:3px}
 @media(max-width:750px){.header-inner{justify-content:flex-start}.brand-link{margin-right:0}.site-nav{justify-content:flex-start}.admin-form{grid-template-columns:1fr}.admin-form .field-label:nth-child(2),.admin-form .field-label:nth-child(8){grid-column:auto}}
+
+/* Teach Me a Lesson CMS */
+.tml-cms{display:grid;grid-template-columns:245px minmax(0,1fr);gap:28px;margin-top:28px;align-items:start}
+.tml-cms-nav{display:flex;flex-direction:column;gap:7px;padding:20px;background:#f5f1ff;border:1px solid #e5def8;border-radius:22px;position:sticky;top:20px}
+.tml-cms-nav strong{margin:0 8px 10px;color:#292450}
+.tml-cms-nav button{border:0;border-radius:12px;padding:12px 14px;text-align:left;background:transparent;color:#292450;font-weight:800}
+.tml-cms-nav button:hover,.tml-cms-nav button.active{background:#292450;color:white}
+.tml-cms-main{min-width:0}
+.tml-cms-main h2{margin-top:0}
+.tml-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:28px}
+.tml-stats>div{background:white;border:1px solid #e8e1f6;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:7px}
+.tml-stats strong{font-size:34px;color:#7254c8}.tml-stats span{font-size:13px;color:#64617a}
+.tml-cms-main .admin-panel{margin-bottom:24px}
+.tml-cms-main .admin-list-item{gap:14px;flex-wrap:wrap}
+.tml-cms-main .admin-list-item button{padding:8px 12px;font-size:12px}
+@media(max-width:850px){.tml-cms{grid-template-columns:1fr}.tml-cms-nav{position:static;display:flex;flex-direction:row;flex-wrap:wrap}.tml-cms-nav strong{width:100%}.tml-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.tml-stats{grid-template-columns:1fr}}
