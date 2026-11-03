@@ -1,29 +1,20 @@
 # Teach Me a Lesson
 
-A free UK learning-resource website from We Are Elixir.
+Free UK educational resources by We Are Elixir.
 
-## Fresh start
+## Hostinger CMS deployment
 
-All previously shipped game and worksheet pages and generators have been removed from the active website code. The public library starts empty, ready for new original resources. Git history preserves the previous implementations if they are ever needed for reference.
+The admin area at `/admin` now includes MySQL-backed subject/type/category/stage/year management, resource create/edit/delete, publishing, PDF/image upload, and a server-side MySQL connection test. The public library reads published resources from MySQL. The original logo/header/footer remain in place.
 
-The approved logo remains at the top left; Teachrex is a separate mascot illustration. The footer displays Teach Me a Lesson by We Are Elixir and links to https://weareelixir.co.uk/.
+**Deployment prerequisites:**
+1. Confirm Hostinger supports the Next.js 15 Node.js runtime and persistent writable server storage.
+2. Back up the existing database and files. Run `database/001_tml_cms.sql` on the designated MySQL database using phpMyAdmin. The migration is not automatically executed.
+3. Set the environment variables in `.env.example` using Hostinger's secure server configuration. The upload directory must be absolute, persistent, writable by the application and outside public_html. Never send or commit passwords.
+4. Run `npm install`, `npm run typecheck`, `npm run build` and deploy the app.
+5. Sign in at `/admin`, visit Database settings, test connection, create subjects/types/stages and publish a test PDF. Confirm the file remains available after redeployment.
 
-## Admin content manager
+**Security:** Database credentials are read only from server-side environment variables. They are not editable through a browser form: initial secure bootstrap is necessary. Direct uploads accept verified PDF, PNG, JPEG and WebP files up to 20 MB. Unpublished files require an admin session to download. Set HTTPS, backups, login rate limiting, malware scanning and storage quotas before opening uploads to multiple staff.
 
-Visit `/admin` to sign in and create resource entries with title, description, subject, type, stages, year groups, category, link, and draft/published status.
+**Known gaps:** No database credential saving from the UI, no multi-user roles, no visual homepage editor, no media deletion or full media library, no category hierarchy editor, no migration of any previously stored GitHub catalogue, and no transactional resource/stage save. The existing public filter controls have default static subject/type lists, so newly added classifications may not yet appear as filter choices. This is an initial working CMS, not a complete Twinkl-style platform.
 
-**Hosting setup required**: set `TML_ADMIN_PASSWORD` (at least 16 characters), `TML_SESSION_SECRET` (at least 32 random characters), and `TML_GITHUB_TOKEN` (fine-grained Contents read/write permission for this repository). Optional `TML_CONTENT_REPO` defaults to `elixirentertainmentltd-cyber/teacher`. Configure these in the hosting environment, never in the repository. The server reads/writes `data/resources.json` on `main` via the GitHub API. Publishing requires a writable GitHub token and a hosting platform that supports Next.js server routes.
-
-Admin functionality currently supports creating draft or published *link-based* entries. It does not yet support uploads, edits, deletion, user accounts or roles. These should be added before a larger content team uses it. Secure the hosting endpoint with HTTPS, rate limiting/WAF protections and secret rotation. Never put admin credentials in client-side code.
-
-Public resources are free to access without login. The catalogue is empty until an admin adds and publishes an entry.
-
-## Local checks
-
-```bash
-npm install
-npm run typecheck
-npm run build
-```
-
-Do not deploy without confirming the hosting platform supports the Next.js server APIs, configuring the required environment variables, and testing login, draft/publish, navigation, mobile layout and GitHub content writes.
+Do not merge to production until the Hostinger environment and MySQL schema are verified, build checks pass and upload/download workflows are tested.

@@ -1,6 +1,6 @@
-export type Stage = "KS1" | "KS2" | "KS3" | "KS4";
-export type Subject = "Maths" | "English" | "Science" | "Reading & Writing" | "Speech & Language" | "Life Skills" | "Special Education";
-export type ResourceType = "Printable worksheet" | "Interactive activity" | "Teaching resource";
+export type Stage = string;
+export type Subject = string;
+export type ResourceType = string;
 export type Resource = {
   id: string; title: string; description: string; subject: Subject; stages: Stage[];
   years: string; type: ResourceType; category: string; url: string;
