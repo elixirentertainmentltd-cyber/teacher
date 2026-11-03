@@ -13,10 +13,10 @@ const symbols: Record<string, string> = {
   "fractions": "½", "percentages": "%", "algebra": "x²"
 };
 
-export default function ResourceExplorer({ initialStage }: { initialStage: StageFilter }) {
+export default function ResourceExplorer({ initialStage, initialType = "All", initialSubject = "All" }: { initialStage: StageFilter; initialType?: TypeFilter; initialSubject?: string }) {
   const [stage, setStage] = useState<StageFilter>(initialStage);
-  const [subject, setSubject] = useState<SubjectFilter>("All");
-  const [type, setType] = useState<TypeFilter>("All");
+  const [subject, setSubject] = useState<SubjectFilter>(SUBJECTS.includes(initialSubject as Subject) ? initialSubject as Subject : "All");
+  const [type, setType] = useState<TypeFilter>(initialType);
   const [year, setYear] = useState("All");
   const [query, setQuery] = useState("");
   const results = useMemo(() => RESOURCES.filter(item =>
