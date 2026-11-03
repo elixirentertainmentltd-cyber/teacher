@@ -1,39 +1,29 @@
 # Teach Me a Lesson
 
-A playful, UK-first teaching resources website for **Key Stages 1–4 (Years 1–11)**, from **We Are Elixir**.
+A free UK learning-resource website from We Are Elixir.
 
-## What works in this first release
+## Fresh start
 
-- Resource library with search and Key Stage / subject filters
-- Eight functioning printable worksheet generators for maths and English
-- Spelling sheets using teacher-supplied words
-- Question refresh, answer-key toggle and browser print / Save as PDF
-- Classroom countdown timer and a random pupil picker (names stay in the browser)
-- Responsive homepage, branded with the approved **mascot-free logo** and a **separate Teachrex image**
+All previously shipped game and worksheet pages and generators have been removed from the active website code. The public library starts empty, ready for new original resources. Git history preserves the previous implementations if they are ever needed for reference.
 
-This first version provides original practice activities; it is **not an exam-board-endorsed or curriculum-certified pack**. Expand and quality-check resources against the relevant English national curriculum / GCSE specifications before representing them as comprehensive.
+The approved logo remains at the top left; Teachrex is a separate mascot illustration. The footer displays Teach Me a Lesson by We Are Elixir and links to https://weareelixir.co.uk/.
 
-## Start locally
+## Admin content manager
+
+Visit `/admin` to sign in and create resource entries with title, description, subject, type, stages, year groups, category, link, and draft/published status.
+
+**Hosting setup required**: set `TML_ADMIN_PASSWORD` (at least 16 characters), `TML_SESSION_SECRET` (at least 32 random characters), and `TML_GITHUB_TOKEN` (fine-grained Contents read/write permission for this repository). Optional `TML_CONTENT_REPO` defaults to `elixirentertainmentltd-cyber/teacher`. Configure these in the hosting environment, never in the repository. The server reads/writes `data/resources.json` on `main` via the GitHub API. Publishing requires a writable GitHub token and a hosting platform that supports Next.js server routes.
+
+Admin functionality currently supports creating draft or published *link-based* entries. It does not yet support uploads, edits, deletion, user accounts or roles. These should be added before a larger content team uses it. Secure the hosting endpoint with HTTPS, rate limiting/WAF protections and secret rotation. Never put admin credentials in client-side code.
+
+Public resources are free to access without login. The catalogue is empty until an admin adds and publishes an entry.
+
+## Local checks
 
 ```bash
 npm install
-npm run dev
+npm run typecheck
+npm run build
 ```
 
-Visit http://localhost:3000. Also run `npm run typecheck` and `npm run build`.
-
-## Stack
-
-Next.js App Router, React, TypeScript and CSS. No database or sign-in required for this first phase.
-
-## Brand source of truth
-
-We Are Elixir shared Google Drive, **Teach Me a Lesson** folder. Keep the logo free of the mascot; Teachrex is a separate brand asset. Both supplied image files are included under `public/brand/`.
-
-## Next improvements
-
-Teacher-reviewed resource catalogue, subject and year-specific curriculum tagging, saved teacher collections, accessibility testing, printable PDF layouts, content management and eventual account features. Do not collect pupil information without a clear safeguarding and privacy design.
-
-## Deployment
-
-Connect this repository to a Next.js-capable hosting service such as Vercel. No production deployment or domain mapping is configured by this commit.
+Do not deploy without confirming the hosting platform supports the Next.js server APIs, configuring the required environment variables, and testing login, draft/publish, navigation, mobile layout and GitHub content writes.
