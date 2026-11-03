@@ -1,3 +1,4 @@
+import { validAdminOrigin } from "@/lib/request-origin";
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
@@ -9,7 +10,7 @@ export const runtime="nodejs";
 const types:Record<string,string>={"application/pdf":".pdf","image/png":".png","image/jpeg":".jpg","image/webp":".webp"};
 export async function POST(req:Request){
  if(!await isAdmin())return NextResponse.json({error:"Unauthorised"},{status:401});
- const origin=req.headers.get("origin");if(origin&&origin!==new URL(req.url).origin)return NextResponse.json({error:"Invalid origin"},{status:403});
+ if(!validAdminOrigin(req))return NextResponse.json({error:"Invalid origin"},{status:403});
  const dir=process.env.TML_UPLOAD_DIR;
  if(!dir||!path.isAbsolute(dir))return NextResponse.json({error:"Set an absolute persistent TML_UPLOAD_DIR in Hostinger settings"},{status:503});
  const data=await req.formData().catch(()=>null);const file=data?.get("file");
