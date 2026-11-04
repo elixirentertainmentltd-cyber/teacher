@@ -57,3 +57,22 @@ test('animal proportions distinguish insects, small mammals and larger animals',
  assert.ok(size('Ladybird')<size('Rabbit'));assert.ok(size('Rabbit')<size('Fox'));assert.ok(size('Fox')<size('Deer'));
  const scene=structuredClone(world);scene.creatures[0].size=1.5;scene.creatures[0].motion='fly';assert.equal(validateScene(scene),true);scene.creatures[0].motion='teleport';assert.equal(validateScene(scene),false);
 });
+
+const audio=load('lib/calm-critters-audio.ts');
+function tone(amplitude){return Float32Array.from({length:1024},(_,i)=>amplitude*Math.sin(i*.17));}
+test('quiet microphone speech reaches the sound goal instead of disappearing in the byte/linear scale',()=>{
+ const quiet=audio.roomSoundLevel(tone(.0001));const speech=audio.roomSoundLevel(tone(.015));
+ assert.ok(quiet<22);assert.ok(speech>38);assert.ok(audio.roomSoundLevel(tone(.08))>speech);
+ let state=noise.calmNoise(),fled=false;
+ for(let i=0;i<30;i++){const response=noise.advanceNoise(state,speech,38,.1,true);state=response.state;fled||=response.retreat;}
+ assert.equal(fled,true);
+});
+test('noise timing remains responsive on a low-frame-rate projector',()=>{
+ let state=noise.calmNoise(),fled=false;
+ for(let i=0;i<3;i++){const response=noise.advanceNoise(state,80,38,1,true);state=response.state;fled||=response.retreat;}
+ assert.equal(fled,true);
+});
+test('removing a whole population retains every animal for the escape animation',()=>{
+ const group=data.DEFAULT_SCENES[0].creatures.slice(0,4).map(creature=>({creature,leaving:false}));
+ const actors=motion.reconcileActors(group,[],true);assert.equal(actors.length,4);assert.equal(actors.filter(a=>a.leaving).length,4);
+});
