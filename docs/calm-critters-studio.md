@@ -5,7 +5,7 @@ Open **Admin → Calm Critters studio** using the existing website admin login.
 1. Select a built-in scene to edit, or choose **New scene**.
 2. Give the scene a name and description, then upload its landscape background.
 3. Choose **Add creature**, enter its name and upload a PNG or WebP with a transparent background (JPEG is also accepted).
-4. Set its position and size using the preview and sliders. Choose **Arrive earlier/later** to set discovery order. Each scene supports up to 60 creatures.
+4. Set its position and size using the preview and sliders. Choose **Arrive earlier/later** to set discovery order. Each scene supports up to 60 creature types, with repeated individual arrivals during classroom use. Choose an automatic or explicit movement style (walk, hop, fly, swim, drift or still). Small insects can use sizes down to 1% with half-percentage steps.
 5. Leave **Published** unticked for a private draft, or tick it and choose **Save and publish scene**. Drafting an existing scene also hides it from the public activity. Save before leaving the editor.
 
 Images use the existing persistent `TML_UPLOAD_DIR` and MySQL media records. The studio creates its `tml_calm_scenes` table on first authenticated save; `database/002_calm_critters.sql` can alternatively be run in advance if the app's MySQL account cannot create tables. The earlier core CMS migration remains required for uploads. Uploaded images stay private until referenced by a published scene. Published media may remain cached for up to five minutes after unpublishing, matching the existing media endpoint's cache policy.
@@ -30,3 +30,15 @@ Prompt brief: richly detailed painted storybook environments with natural textur
 - `node --test scripts/calm-critters.test.cjs`: default scene integrity, actual asset presence, malformed input, duplicate identity, bounds and external image rejection, and catalogue fallback without configured MySQL.
 - Browser checks cover switching all seven worlds, artwork preview, settings presets, timer, local admin login, loading built-in scenes, creature creation, naming, positioning and arrival reordering.
 - Live MySQL persistence, persistent upload permissions and real microphone input still require deployment verification. No production database credentials were present in this development workspace.
+
+## Roaming, repeated arrivals and size
+
+Calm Critters creates a separate instance for every arrival, including repeated animals of the same species. Arrivals continue after every species has appeared; there is no one-per-species or twelve-animal limit. Each instance has its own identity, position and roaming phase. The classroom counter counts individuals; the collection tracks unique species. Browser performance remains dependent on the number of visible animals. Existing browser progress migrates to individual instances.
+
+Walking animals patrol and turn around; rabbits hop, flying creatures drift through the air, and fish swim. Built-in widths and feet positions now distinguish insects, small mammals and larger animals. Transparent margins in sprite sheets are cropped by the renderer so image padding no longer determines apparent size. Admin-authored scenes retain their saved sizes.
+
+**Animals run away** is enabled for this upgrade, including browsers that previously inherited the pause default. Teachers can still select Pause progress afterwards. Sustained excessive noise sends one individual visibly off the edge, then another every five seconds of continued noise. Departing artwork remains mounted until the escape animation ends; the collection is retained. A brief interruption is still tolerated, and three seconds of calm clears the weather. Reduced-motion preferences stop roaming and replace exits with a short fade. Pausing the activity freezes roaming.
+
+In artwork preview, use **Add an animal** repeatedly to see duplicate arrivals, then **Test loud noise** and **Return to quiet** to exercise the shared sound-response logic with simulated levels. No microphone is used and preview animals are not saved to the classroom collection.
+
+Additional automated checks cover brief versus sustained noise, repeated retreats, quiet recovery, pause-only behaviour, exit retention/re-entry, 150 arrivals of one species with unique identities, and relative sizing. The real microphone path still needs validation on a classroom device.

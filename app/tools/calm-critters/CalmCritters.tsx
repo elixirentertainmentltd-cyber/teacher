@@ -8,6 +8,9 @@ import {
   Sparkles, Volume2, X
 } from "lucide-react";
 import "./calm-critters.css";
+import AnimatedCritters from "@/components/AnimatedCritters";
+import { EMPTY_POPULATION, initialPopulation, spawnCreature, populationDiscoveries, type CreatureInstance } from "@/lib/calm-critters-population";
+import { advanceNoise } from "@/lib/calm-critters-noise";
 import CritterArtwork from "@/components/CritterArtwork";
 import { DEFAULT_SCENES, type CritterScene } from "@/lib/calm-critters-data";
 
@@ -17,8 +20,7 @@ type Settings = {
   goal: number; arrivalSeconds: number; showMeter: boolean; showCounter: boolean;
   deviceId: string; noiseResponse: NoiseResponse;
 };
-const DEFAULT_SETTINGS: Settings = { goal: 24, arrivalSeconds: 120, showMeter: false, showCounter: false, deviceId: "", noiseResponse: "pause" };
-const freshCounts = () => Object.fromEntries(DEFAULT_SCENES.map(scene => [scene.id,0])) as Record<string, number>;
+const DEFAULT_SETTINGS: Settings = { goal: 24, arrivalSeconds: 120, showMeter: false, showCounter: false, deviceId: "", noiseResponse: "retreat" };
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 function readStored<T>(key: string, fallback: T): T {
   try { const value = window.localStorage.getItem(key); return value ? JSON.parse(value) as T : fallback; }
@@ -34,11 +36,16 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
   useEffect(() => { habitatsRef.current = HABITATS; });
   const [showScenes, setShowScenes] = useState(false);
   const [demo, setDemo] = useState(false);
-  const [demoCount, setDemoCount] = useState(4);
+  const [demoAnimals, setDemoAnimals] = useState<CreatureInstance[]>(()=>initialPopulation(initialScenes[0],4,"preview"));
+  const arrivalId = useRef(0);
+  const [demoNoise, setDemoNoise] = useState(false);
+  const demoRef = useRef(false);
+  const demoNoiseRef = useRef(false);
+  useEffect(()=>{demoRef.current=demo;demoNoiseRef.current=demoNoise;},[demo,demoNoise]);
   const [seen, setSeen] = useState<string[]>([]);
   const [scene, setScene] = useState<Habitat>(initialScenes[0].id);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const [counts, setCounts] = useState<Record<Habitat,number>>(freshCounts);
+  const [populations, setPopulations] = useState<Record<string,CreatureInstance[]>>({});
   const [quietSeconds, setQuietSeconds] = useState(0);
   const [level, setLevel] = useState(0);
   const [tooLoud, setTooLoud] = useState(false);
@@ -70,7 +77,7 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
   const active = useRef(false);
   const settingsRef = useRef(settings);
   const sceneRef = useRef(scene);
-  const countsRef = useRef(counts);
+  const populationsRef = useRef(populations);
   const runningRef = useRef(false);
   const pressureRef = useRef(0);
   const recoveryRef = useRef(0);
@@ -79,27 +86,29 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
   const calibrationRef = useRef<{elapsed:number; sum:number; samples:number; stage:"quiet"|"talk"} | null>(null);
   const meterClockRef = useRef(0);
   const sceneLabel = HABITATS[scene] || scenes[0];
-  const discovered = demo ? demoCount : (counts[scene] || 0);
-  const complete = discovered >= sceneLabel.creatures.length;
-  const revealInterval = discovered === 0 ? Math.min(15, settings.arrivalSeconds) : settings.arrivalSeconds;
-  const progress = complete ? 100 : clamp(quietSeconds / revealInterval * 100, 0, 100);
+  const animals = demo ? demoAnimals : (populations[scene] || EMPTY_POPULATION);
+  const discovered = animals.length;
+  const nextArrivalId = () => `arrival-${Date.now()}-${arrivalId.current++}`;
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setSettings(prev => ({...prev,[key]:value}));
   };
   useEffect(() => {
     const oldSettings = readStored<Partial<Settings>>("tml-calm-critters-settings-v2",{});
-    setSettings({...DEFAULT_SETTINGS,...oldSettings});
+    setSettings(readStored<Settings>("tml-calm-critters-settings-v3",{...DEFAULT_SETTINGS,...oldSettings,noiseResponse:"retreat"}));
     const oldCounts = readStored<Record<Habitat,number>>("tml-calm-critters-collections-v2",{});
-    setCounts({...freshCounts(),...oldCounts});
+    const migrated=Object.fromEntries(initialScenes.map(s=>[s.id,initialPopulation(s,oldCounts[s.id]||0,"saved")]));
+    const storedPopulations=readStored<Record<string,CreatureInstance[]>>("tml-calm-critters-populations-v4",migrated);
+    const restored=Object.fromEntries(initialScenes.map(s=>[s.id,(Array.isArray(storedPopulations[s.id])?storedPopulations[s.id]:[]).filter(a=>a && typeof a.id==="string" && s.creatures.some(c=>c.id===a.creatureId) && [a.left,a.top,a.size].every(Number.isFinite))]));
+    setPopulations(restored);
     const oldScene = readStored<Habitat>("tml-calm-critters-scene-v2","meadow");
     if (KEYS.includes(oldScene)) setScene(oldScene);
     const oldSeen=readStored<Record<string,number>>("tml-calm-critters-seen-v3",oldCounts);
     setSeen(readStored<string[]>("tml-calm-critters-seen-v4",initialScenes.flatMap(s=>s.creatures.slice(0,oldSeen[s.id]||0).map(c=>c.id))));
     setMounted(true);
   }, []);
-  useEffect(() => { settingsRef.current=settings; if(mounted) try {localStorage.setItem("tml-calm-critters-settings-v2",JSON.stringify(settings));}catch{} },[settings,mounted]);
-  useEffect(() => { countsRef.current=counts; if(mounted) try {localStorage.setItem("tml-calm-critters-collections-v2",JSON.stringify(counts));}catch{} },[counts,mounted]);
+  useEffect(() => { settingsRef.current=settings; if(mounted) try {localStorage.setItem("tml-calm-critters-settings-v3",JSON.stringify(settings));}catch{} },[settings,mounted]);
+  useEffect(() => { populationsRef.current=populations; if(mounted) try {localStorage.setItem("tml-calm-critters-populations-v4",JSON.stringify(populations));}catch{} },[populations,mounted]);
   useEffect(() => {
     sceneRef.current=scene;
     quietRef.current=0;
@@ -107,8 +116,8 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
     if(mounted) try {localStorage.setItem("tml-calm-critters-scene-v2",JSON.stringify(scene));}catch{}
   },[scene,mounted]);
   useEffect(() => {
-    setSeen(previous => [...new Set([...previous,...scenes.flatMap(s=>s.creatures.slice(0,counts[s.id]||0).map(c=>c.id))])]);
-  },[counts]);
+    setSeen(previous => [...new Set([...previous,...populationDiscoveries(populations)])]);
+  },[populations]);
   useEffect(() => { if(mounted) try {localStorage.setItem("tml-calm-critters-seen-v4",JSON.stringify(seen));}catch{} },[seen,mounted]);
   useEffect(() => { runningRef.current=running; if(!running) { pressureRef.current=0; recoveryRef.current=0; tooLoudRef.current=false; setTooLoud(false); } },[running]);
   useEffect(() => {
@@ -181,19 +190,19 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
   };
 
   useEffect(() => {
-    if(!listening) return;
+    if(!listening && !demo) return;
     let raf=0;
     const tick=(now:number) => {
-      if(!active.current) return;
+      if(!active.current && !demoRef.current) return;
       const previous=frameTime.current;
       frameTime.current=now;
       const samples=buffer.current;
       const node=analyser.current;
-      if(samples && node) {
-        node.getByteTimeDomainData(samples);
+      if((samples && node) || demoRef.current) {
+        if(samples && node) node.getByteTimeDomainData(samples);
         let sum=0;
-        for(const value of samples) { const norm=(value-128)/128; sum+=norm*norm; }
-        const measured=clamp(Math.round(Math.sqrt(sum/samples.length)*300),0,100);
+        for(const value of samples || []) { const norm=(value-128)/128; sum+=norm*norm; }
+        const measured=demoRef.current?(demoNoiseRef.current?95:0):clamp(Math.round(Math.sqrt(sum/(samples?.length||1))*300),0,100);
         const delta=previous===null?0:clamp((now-previous)/1000,0,.15);
         meterClockRef.current+=delta;
         if(meterClockRef.current>.08) { setLevel(measured); meterClockRef.current=0; }
@@ -208,42 +217,28 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
             else { updateSetting("goal",clamp(Math.round(quietBaseline.current+Math.max(8,(mean-quietBaseline.current)*.45)),5,65));setCalibrationStage(null); }
             calibrationRef.current=null; setCalibrating(false);
           }
-        } else if(runningRef.current) {
+        } else if(runningRef.current || demoRef.current) {
           const goal=settingsRef.current.goal;
           const excessive=measured>goal;
-          if(!tooLoudRef.current) {
-            pressureRef.current=clamp(pressureRef.current+(excessive?
-              (1+Math.pow((measured-goal)/12,2))*delta : -1.4*delta),0,6);
-            if(pressureRef.current>=6) {
-              tooLoudRef.current=true; recoveryRef.current=0;retreatClock.current=0; setTooLoud(true);
-              if(settingsRef.current.noiseResponse==="retreat") {
-                const key=sceneRef.current;
-                const updated={...countsRef.current,[key]:Math.max(0,(countsRef.current[key]||0)-1)};
-                countsRef.current=updated; setCounts(updated);
-              }
-            }
-          } else {
-            recoveryRef.current=excessive?0:recoveryRef.current+delta;
-            retreatClock.current=excessive?retreatClock.current+delta:0;
-            if(settingsRef.current.noiseResponse==="retreat"&&retreatClock.current>=5){const key=sceneRef.current;const updated={...countsRef.current,[key]:Math.max(0,(countsRef.current[key]||0)-1)};countsRef.current=updated;setCounts(updated);retreatClock.current=0;}
-            if(recoveryRef.current>=3) {
-              tooLoudRef.current=false; pressureRef.current=0;
-              recoveryRef.current=0; setTooLoud(false);
-            }
+          const response=advanceNoise({pressure:pressureRef.current,recovery:recoveryRef.current,retreatClock:retreatClock.current,tooLoud:tooLoudRef.current},measured,goal,delta,settingsRef.current.noiseResponse==="retreat");
+          pressureRef.current=response.state.pressure;recoveryRef.current=response.state.recovery;retreatClock.current=response.state.retreatClock;
+          if(tooLoudRef.current!==response.state.tooLoud){tooLoudRef.current=response.state.tooLoud;setTooLoud(response.state.tooLoud);}
+          if(response.retreat){
+            quietRef.current=0;setQuietSeconds(0);
+            if(demoRef.current)setDemoAnimals(items=>items.slice(0,-1));
+            else {const key=sceneRef.current;const updated={...populationsRef.current,[key]:(populationsRef.current[key]||[]).slice(0,-1)};populationsRef.current=updated;setPopulations(updated);}
           }
-          if(!tooLoudRef.current && !calibrationRef.current && !excessive) {
+          if(!demoRef.current && !tooLoudRef.current && !calibrationRef.current && !excessive) {
             const key=sceneRef.current;
-            const limit=habitatsRef.current[key]?.creatures.length || 0;
-            const seconds=!countsRef.current[key]?Math.min(15,settingsRef.current.arrivalSeconds):settingsRef.current.arrivalSeconds;
-            if((countsRef.current[key]||0)<limit) {
-              quietRef.current+=delta;
-              if(quietRef.current>=seconds) {
-                quietRef.current=0;
-                const updated={...countsRef.current,[key]:(countsRef.current[key]||0)+1};
-                countsRef.current=updated; setCounts(updated);
-              }
-              setQuietSeconds(quietRef.current);
+            const world=habitatsRef.current[key];
+            const seconds=!(populationsRef.current[key]?.length)?Math.min(15,settingsRef.current.arrivalSeconds):settingsRef.current.arrivalSeconds;
+            quietRef.current+=delta;
+            if(world && quietRef.current>=seconds){
+              quietRef.current=0;
+              const updated={...populationsRef.current,[key]:[...(populationsRef.current[key]||[]),spawnCreature(world,nextArrivalId())]};
+              populationsRef.current=updated;setPopulations(updated);
             }
+            setQuietSeconds(quietRef.current);
           }
         }
       }
@@ -251,7 +246,7 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
     };
     raf=requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  },[listening]);
+  },[listening,demo]);
 
   useEffect(() => {
     if(!showSettings && !showGuide && !showCollection && !resetConfirm) return;
@@ -268,10 +263,10 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
   },[showSettings,showGuide,showCollection,resetConfirm]);
 
   const resetHabitat=() => {
-    const updated={...countsRef.current,[scene]:0};
-    countsRef.current=updated; setCounts(updated); quietRef.current=0; setQuietSeconds(0);
+    const updated={...populationsRef.current,[scene]:[]};
+    populationsRef.current=updated; setPopulations(updated); quietRef.current=0; setQuietSeconds(0);
     pressureRef.current=0; recoveryRef.current=0; setTooLoud(false); tooLoudRef.current=false;
-    if(demo) setDemoCount(0);
+    if(demo) setDemoAnimals([]);
     setResetConfirm(false);
   };
   const calibrate=() => {
@@ -308,31 +303,28 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
             <button type="button" onClick={fullscreen} aria-label={isFullscreen?"Exit full screen":"Full screen"}><Expand size={18}/></button>
           </div>
         </div>
-        {showScenes && <div className="cc-world-menu" role="group" aria-label="Choose a world">{scenes.map(world=><button key={world.id} onClick={()=>{setScene(world.id);setDemoCount(4);setShowScenes(false)}} aria-pressed={scene===world.id}>
+        {showScenes && <div className="cc-world-menu" role="group" aria-label="Choose a world">{scenes.map(world=><button key={world.id} onClick={()=>{setScene(world.id);setDemoAnimals(initialPopulation(world,4,"preview"));setDemoNoise(false);pressureRef.current=0;recoveryRef.current=0;retreatClock.current=0;tooLoudRef.current=false;setTooLoud(false);setShowScenes(false)}} aria-pressed={scene===world.id}>
           <img src={world.background} alt=""/><span><strong>{world.name}</strong><small>{world.tagline}</small></span>{scene===world.id&&<Check size={17}/>}
         </button>)}</div>}
         {settings.showMeter && listening && <div className="cc-screen-meter">
           <span><Volume2 size={15}/> {tooLoud?"Time to settle":level>settings.goal?"A little louder":"Lovely and calm"}</span>
           <div className="cc-meter-fill"><i style={{width:`${level}%`}}/><b style={{left:`${settings.goal}%`}}/></div>
         </div>}
-        {sceneLabel.creatures.slice(0,discovered).map((animal,i)=>
-          <div key={animal.id} className="cc-animal" style={{left:`${animal.left}%`,top:`${animal.top}%`,width:`${animal.size}%`,zIndex:Math.round(animal.top),animationDelay:`${i*.08}s`}}
-            role="img" aria-label={animal.name} title={animal.name}><CritterArtwork image={animal.image}/><span className="cc-animal-label">{animal.name}</span></div>
-        )}
+        <AnimatedCritters key={`${scene}-${demo?"preview":"classroom"}`} scene={sceneLabel} population={animals} retreating={tooLoud && settings.noiseResponse==="retreat"} paused={!(running||demo) || tooLoud}/>
         {!listening && !demo && <div className="cc-start-overlay">
           <span className="cc-welcome-kicker">TEACH ME A LESSON</span><h1>Calm <em>Critters</em></h1><h2>Let quiet bring your world to life.</h2>
           <p>Allow your microphone, then see who comes out when your classroom gets quiet.</p>
           <button type="button" onClick={()=>void connect(settings.deviceId)}><Mic size={20}/> Start listening</button>
-          <button type="button" className="cc-preview-link" onClick={()=>{setDemo(true);setDemoCount(4)}}>Preview the artwork without a microphone</button><small>No account. No recording. Completely free.</small>
+          <button type="button" className="cc-preview-link" onClick={()=>{setDemo(true);setDemoAnimals(initialPopulation(sceneLabel,4,"preview"));setDemoNoise(false);pressureRef.current=0;recoveryRef.current=0;retreatClock.current=0;tooLoudRef.current=false;setTooLoud(false)}}>Preview the artwork without a microphone</button><small>No account. No recording. Completely free.</small>
         </div>}
-        {tooLoud && running && <div className="cc-weather-overlay" aria-live="polite"><div className="cc-weather-message">Let’s settle and watch the world clear</div></div>}
+        {tooLoud && (running||demo) && <div className="cc-weather-overlay" aria-live="polite"><div className="cc-weather-message">Let’s settle and watch the world clear</div></div>}
         {!running && listening && <div className="cc-paused-banner">Adventure paused</div>}
         {timerLeft!==null && <div className="cc-timer-badge"><Clock3 size={18}/> {formatTime(timerLeft)}{timerLeft===0?" • Time's up!":""}</div>}
         <div className="cc-scene-bottom">
-          {settings.showCounter && <span>{discovered} / {sceneLabel.creatures.length} friends discovered</span>}
-          <span>{complete?"Amazing! Every friend is here":tooLoud?"Our friends are waiting for calm":running?"Quiet moments bring new friends":"Ready for your adventure"}</span>
+          {settings.showCounter && <span>{discovered} animals exploring</span>}
+          <span>{tooLoud?"Our friends are waiting for calm":running?"Quiet moments bring new friends":"Ready for your adventure"}</span>
         </div>
-        {demo && <div className="cc-demo-controls"><span>Artwork preview · microphone off</span><button onClick={()=>setDemoCount(v=>Math.min(sceneLabel.creatures.length,v+1))} disabled={demoCount>=sceneLabel.creatures.length}>Reveal a friend</button><button onClick={()=>setDemo(false)}>Exit preview</button></div>}
+        {demo && <div className="cc-demo-controls"><span>Artwork preview · microphone off</span><button onClick={()=>{const animal=spawnCreature(sceneLabel,nextArrivalId());setDemoAnimals(items=>[...items,animal])}}>Add an animal</button><button aria-pressed={demoNoise} onClick={()=>setDemoNoise(value=>!value)}>{demoNoise?"Return to quiet":"Test loud noise"}</button><button onClick={()=>{setDemo(false);setDemoNoise(false);setTooLoud(false);tooLoudRef.current=false;pressureRef.current=0;recoveryRef.current=0;retreatClock.current=0}}>Exit preview</button></div>}
         <div className="cc-stage-controls">
           {listening && <button onClick={()=>setRunning(v=>!v)}>{running?<Pause size={17}/>:<Play size={17}/>} {running?"Pause":"Resume"}</button>}
           <button onClick={()=>setResetConfirm(true)} aria-label="Reset scene"><RotateCcw size={17}/></button>
@@ -382,9 +374,9 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
           <p>A brief interruption is ignored. Sustained noise shows a gentle weather effect.</p>
           <div className="cc-setting-options">
             <button type="button" className={settings.noiseResponse==="pause"?"active":""} onClick={()=>updateSetting("noiseResponse","pause")}>Pause progress</button>
-            <button type="button" className={settings.noiseResponse==="retreat"?"active":""} onClick={()=>updateSetting("noiseResponse","retreat")}>Friends retreat</button>
+            <button type="button" className={settings.noiseResponse==="retreat"?"active":""} onClick={()=>updateSetting("noiseResponse","retreat")}>Animals run away</button>
           </div>
-          <p className="cc-hint">In Pause progress mode, earned creatures always stay. In Friends retreat mode, creatures leave after sustained noise and every five seconds until the room settles. Your collection remembers every discovery.</p>
+          <p className="cc-hint">In Pause progress mode, earned creatures always stay. In Animals run away mode, creatures visibly run, hop, fly or swim off-screen after sustained noise, then one more leaves every five seconds until the room settles. Your collection remembers every discovery.</p>
         </section>
         <section>
           <h3><Clock3 size={17}/> How often friends arrive</h3>
@@ -424,12 +416,12 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
         <section><h3>1. Choose a world</h3><p>Pick a setting to display on a screen or interactive whiteboard. Different classes can explore different worlds.</p></section>
         <section><h3>2. Allow your microphone</h3><p>Press Start listening and allow your browser to use the microphone. It measures volume locally without recording speech.</p></section>
         <section><h3>3. Set the right volume goal</h3><p>Open Settings to choose Silent, Independent or Partner work, or set a custom goal. Select the correct microphone and calibrate if needed.</p></section>
-        <section><h3>4. Find your critters</h3><p>The first friend appears quickly. More gradually arrive while the room stays calm. A dropped pencil or short interruption won't immediately stop the adventure. Longer noise brings temporary cloudy weather.</p></section>
+        <section><h3>4. Find your critters</h3><p>The first friend appears quickly. More gradually arrive while the room stays calm, including more than one of the same animal. There is no one-per-species limit. A dropped pencil or short interruption won't immediately stop the adventure. Longer noise brings temporary cloudy weather.</p></section>
         <section><h3>5. Pause when you need to teach</h3><p>Pause to speak to the class without affecting progress. Resume when quiet working begins again. Use the classroom timer for a lesson countdown.</p></section>
         <section><h3>Frequently asked questions</h3>
           <details><summary>Does Calm Critters record our conversations? <ChevronDown size={16}/></summary><p>No. The browser measures a sound level only; no audio is recorded or sent to our servers.</p></details>
           <details><summary>Why is it not detecting sound? <ChevronDown size={16}/></summary><p>Check microphone permission, use HTTPS, choose the right input in Settings and move the sensitivity slider. Try the five-second calibration.</p></details>
-          <details><summary>Will we lose the animals we've found? <ChevronDown size={16}/></summary><p>Not by default. Pause progress keeps your discoveries. You can choose an optional mode where one creature hides after sustained noise.</p></details>
+          <details><summary>Will we lose the animals we've found? <ChevronDown size={16}/></summary><p>Animals run away when the room stays too loud, then return gradually as quiet work resumes. Your collection remembers every discovery. Choose Pause progress in Settings to keep animals on-screen instead.</p></details>
           <details><summary>Do we need an account? <ChevronDown size={16}/></summary><p>No. This is a free classroom tool. Collections and preferences are saved only in your browser.</p></details>
         </section>
       </aside>

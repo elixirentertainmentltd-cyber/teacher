@@ -208,3 +208,45 @@ body:has(.cc-v2)>.footer{display:none}
 .cc-v2 .cc-reef .cc-weather-overlay{background:#1749669e}.cc-v2 .cc-galaxy .cc-weather-overlay{background:repeating-linear-gradient(0deg,#5b719040 0 1px,#16203999 2px 4px)}.cc-v2 .cc-jungle .cc-weather-overlay{background:repeating-linear-gradient(105deg,#a0c3c450 0 1px,transparent 2px 14px),#173d3a60}.cc-v2 .cc-arctic .cc-weather-overlay{background:#effbffbf}
 @media(prefers-reduced-motion:reduce){.cc-v2 .cc-animal>.cc-artwork{animation:none}}
 .cc-v2 .cc-noisy .cc-animal>.cc-artwork{animation-play-state:paused}
+
+/* Independent movement layers keep anchors, gentle roaming and escape animation separate. */
+.cc-v2 .cc-adventure{container-type:size}
+.cc-v2 .cc-creature-layer{position:absolute;inset:0;pointer-events:none}
+.cc-v2 .cc-creature-layer .cc-animal{transform:translate(-50%,-100%);pointer-events:auto}
+.cc-v2 .cc-wander{animation:cc-roam var(--cc-roam-time) ease-in-out var(--cc-phase) infinite}
+.cc-v2 .cc-gait{transform-origin:center bottom;animation:cc-stroll var(--cc-step-time) ease-in-out var(--cc-phase) infinite}
+.cc-v2 .cc-gait>.cc-artwork{animation:none!important}
+.cc-v2 .cc-gait>img{display:block;width:100%;height:auto;max-height:none}
+.cc-v2 .cc-motion-hop .cc-gait{animation-name:cc-hop;animation-duration:2.8s}
+.cc-v2 .cc-motion-fly .cc-wander{animation-name:cc-float-flight;animation-duration:12s}
+.cc-v2 .cc-motion-fly .cc-gait{animation-name:cc-hover;animation-duration:1.5s}
+.cc-v2 .cc-motion-swim .cc-wander{animation-name:cc-swim;animation-duration:17s}
+.cc-v2 .cc-motion-swim .cc-gait{animation-name:cc-sway;animation-duration:3s}
+.cc-v2 .cc-motion-drift .cc-wander{animation-name:cc-float-flight;animation-duration:26s}
+.cc-v2 .cc-motion-drift .cc-gait{animation-name:cc-sway;animation-duration:8s}
+.cc-v2 .cc-motion-still .cc-wander,.cc-v2 .cc-motion-still .cc-gait{animation:none}
+.cc-v2 .cc-motion-paused .cc-wander,.cc-v2 .cc-motion-paused .cc-gait{animation-play-state:paused}
+.cc-v2 .cc-creature-layer .cc-leaving{animation:cc-flee 1.8s cubic-bezier(.45,.04,.75,.7) both;pointer-events:none}
+.cc-v2 .cc-leaving .cc-wander{animation:none;transform:translate(var(--cc-exit-x),var(--cc-exit-y)) scaleX(var(--cc-facing))}
+.cc-v2 .cc-leaving .cc-gait{animation:cc-run .16s ease-in-out infinite;animation-play-state:running}
+.cc-v2 .cc-leaving.cc-motion-fly .cc-gait,.cc-v2 .cc-leaving.cc-motion-swim .cc-gait{animation-name:cc-hover}
+.cc-v2 .cc-leaving.cc-motion-drift .cc-gait,.cc-v2 .cc-leaving.cc-motion-still .cc-gait{animation:none}
+.cc-v2 .cc-leaving.cc-motion-still{animation-name:cc-hide}
+@keyframes cc-roam{0%,100%{transform:translateX(-1.5cqw)}50%{transform:translateX(1.5cqw)}}
+@keyframes cc-stroll{0%,100%{transform:translateY(0) rotate(-.6deg)}50%{transform:translateY(-2px) rotate(.6deg)}}
+@keyframes cc-hop{0%,35%,70%,100%{transform:translateY(0)}50%{transform:translateY(-12px) rotate(-3deg)}60%{transform:translateY(-4px) rotate(2deg)}}
+@keyframes cc-float-flight{0%,100%{transform:translate(-2cqw,0)}35%{transform:translate(1cqw,-1.5cqh)}70%{transform:translate(2cqw,1cqh)}}
+@keyframes cc-hover{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-6px) rotate(2deg)}}
+@keyframes cc-swim{0%,100%{transform:translate(-2cqw,0)}50%{transform:translate(2cqw,-1cqh)}}
+@keyframes cc-sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes cc-run{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}
+@keyframes cc-flee{0%{transform:translate(-50%,-100%);opacity:1}95%{opacity:1}100%{transform:translate(-50%,-100%) translateX(var(--cc-escape));opacity:0}}
+@keyframes cc-hide{from{opacity:1}to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.cc-v2 .cc-wander,.cc-v2 .cc-gait{animation:none!important}.cc-v2 .cc-creature-layer .cc-leaving{animation:cc-hide .15s linear both}}
+.cc-v2 .cc-direction{animation:cc-turn var(--cc-roam-time) linear var(--cc-phase) infinite}
+.cc-v2 .cc-motion-fly .cc-direction,.cc-v2 .cc-motion-swim .cc-direction,.cc-v2 .cc-motion-drift .cc-direction,.cc-v2 .cc-motion-still .cc-direction{animation:none}
+.cc-v2 .cc-motion-paused .cc-direction{animation-play-state:paused}
+.cc-v2 .cc-leaving .cc-direction{animation:none;transform:none}
+@keyframes cc-roam{0%,100%{transform:translateX(calc(-1 * var(--cc-roam-range)))}50%{transform:translateX(var(--cc-roam-range))}}
+@keyframes cc-turn{0%,49.99%{transform:scaleX(1)}50%,99.99%{transform:scaleX(-1)}100%{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){.cc-v2 .cc-direction{animation:none!important}}
