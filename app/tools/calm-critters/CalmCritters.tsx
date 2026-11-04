@@ -10,6 +10,7 @@ import {
 import "./calm-critters.css";
 import AnimatedCritters from "@/components/AnimatedCritters";
 import { EMPTY_POPULATION, initialPopulation, spawnCreature, populationDiscoveries, type CreatureInstance } from "@/lib/calm-critters-population";
+import { roomSoundLevel } from "@/lib/calm-critters-audio";
 import { advanceNoise } from "@/lib/calm-critters-noise";
 import CritterArtwork from "@/components/CritterArtwork";
 import { DEFAULT_SCENES, type CritterScene } from "@/lib/calm-critters-data";
@@ -20,7 +21,7 @@ type Settings = {
   goal: number; arrivalSeconds: number; showMeter: boolean; showCounter: boolean;
   deviceId: string; noiseResponse: NoiseResponse;
 };
-const DEFAULT_SETTINGS: Settings = { goal: 24, arrivalSeconds: 120, showMeter: false, showCounter: false, deviceId: "", noiseResponse: "retreat" };
+const DEFAULT_SETTINGS: Settings = { goal: 38, arrivalSeconds: 120, showMeter: false, showCounter: false, deviceId: "", noiseResponse: "retreat" };
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 function readStored<T>(key: string, fallback: T): T {
   try { const value = window.localStorage.getItem(key); return value ? JSON.parse(value) as T : fallback; }
@@ -72,7 +73,7 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
   const analyser = useRef<AnalyserNode | null>(null);
   const audio = useRef<AudioContext | null>(null);
   const stream = useRef<MediaStream | null>(null);
-  const buffer = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const buffer = useRef<Float32Array<ArrayBuffer> | null>(null);
   const frameTime = useRef<number | null>(null);
   const active = useRef(false);
   const settingsRef = useRef(settings);
@@ -95,7 +96,8 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
   };
   useEffect(() => {
     const oldSettings = readStored<Partial<Settings>>("tml-calm-critters-settings-v2",{});
-    setSettings(readStored<Settings>("tml-calm-critters-settings-v3",{...DEFAULT_SETTINGS,...oldSettings,noiseResponse:"retreat"}));
+    const previousSettings=readStored<Partial<Settings>>("tml-calm-critters-settings-v3",oldSettings);
+    setSettings(readStored<Settings>("tml-calm-critters-settings-v4",{...DEFAULT_SETTINGS,...previousSettings,goal:38,noiseResponse:"retreat"}));
     const oldCounts = readStored<Record<Habitat,number>>("tml-calm-critters-collections-v2",{});
     const migrated=Object.fromEntries(initialScenes.map(s=>[s.id,initialPopulation(s,oldCounts[s.id]||0,"saved")]));
     const storedPopulations=readStored<Record<string,CreatureInstance[]>>("tml-calm-critters-populations-v4",migrated);
@@ -107,7 +109,7 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
     setSeen(readStored<string[]>("tml-calm-critters-seen-v4",initialScenes.flatMap(s=>s.creatures.slice(0,oldSeen[s.id]||0).map(c=>c.id))));
     setMounted(true);
   }, []);
-  useEffect(() => { settingsRef.current=settings; if(mounted) try {localStorage.setItem("tml-calm-critters-settings-v3",JSON.stringify(settings));}catch{} },[settings,mounted]);
+  useEffect(() => { settingsRef.current=settings; if(mounted) try {localStorage.setItem("tml-calm-critters-settings-v4",JSON.stringify(settings));}catch{} },[settings,mounted]);
   useEffect(() => { populationsRef.current=populations; if(mounted) try {localStorage.setItem("tml-calm-critters-populations-v4",JSON.stringify(populations));}catch{} },[populations,mounted]);
   useEffect(() => {
     sceneRef.current=scene;
@@ -165,7 +167,7 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
     stopMicrophone();
     try {
       const microphone=await navigator.mediaDevices.getUserMedia({
-        audio: { ...(deviceId ? {deviceId:{exact:deviceId}} : {}), echoCancellation:true, noiseSuppression:false },
+        audio: { ...(deviceId ? {deviceId:{exact:deviceId}} : {}), echoCancellation:false, noiseSuppression:false, autoGainControl:false },
         video:false
       });
       stream.current=microphone;
@@ -178,7 +180,7 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
       meter.smoothingTimeConstant=0.65;
       input.connect(meter); // No connection to speakers; audio never leaves this page.
       audio.current=context; stream.current=microphone; analyser.current=meter;
-      buffer.current=new Uint8Array(new ArrayBuffer(meter.fftSize));
+      buffer.current=new Float32Array(new ArrayBuffer(meter.fftSize*Float32Array.BYTES_PER_ELEMENT));
       pressureRef.current=0; recoveryRef.current=0; tooLoudRef.current=false;
       active.current=true; frameTime.current=null;
       setListening(true); setRunning(true);
@@ -199,11 +201,9 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
       const samples=buffer.current;
       const node=analyser.current;
       if((samples && node) || demoRef.current) {
-        if(samples && node) node.getByteTimeDomainData(samples);
-        let sum=0;
-        for(const value of samples || []) { const norm=(value-128)/128; sum+=norm*norm; }
-        const measured=demoRef.current?(demoNoiseRef.current?95:0):clamp(Math.round(Math.sqrt(sum/(samples?.length||1))*300),0,100);
-        const delta=previous===null?0:clamp((now-previous)/1000,0,.15);
+        if(samples && node) node.getFloatTimeDomainData(samples);
+        const measured=demoRef.current?(demoNoiseRef.current?95:0):samples?roomSoundLevel(samples):0;
+        const delta=previous===null?0:clamp((now-previous)/1000,0,1);
         meterClockRef.current+=delta;
         if(meterClockRef.current>.08) { setLevel(measured); meterClockRef.current=0; }
         if(calibrationRef.current) {
@@ -225,8 +225,8 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
           if(tooLoudRef.current!==response.state.tooLoud){tooLoudRef.current=response.state.tooLoud;setTooLoud(response.state.tooLoud);}
           if(response.retreat){
             quietRef.current=0;setQuietSeconds(0);
-            if(demoRef.current)setDemoAnimals(items=>items.slice(0,-1));
-            else {const key=sceneRef.current;const updated={...populationsRef.current,[key]:(populationsRef.current[key]||[]).slice(0,-1)};populationsRef.current=updated;setPopulations(updated);}
+            if(demoRef.current)setDemoAnimals([]);
+            else {const key=sceneRef.current;const updated={...populationsRef.current,[key]:[]};populationsRef.current=updated;setPopulations(updated);}
           }
           if(!demoRef.current && !tooLoudRef.current && !calibrationRef.current && !excessive) {
             const key=sceneRef.current;
@@ -324,7 +324,7 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
           {settings.showCounter && <span>{discovered} animals exploring</span>}
           <span>{tooLoud?"Our friends are waiting for calm":running?"Quiet moments bring new friends":"Ready for your adventure"}</span>
         </div>
-        {demo && <div className="cc-demo-controls"><span>Artwork preview · microphone off</span><button onClick={()=>{const animal=spawnCreature(sceneLabel,nextArrivalId());setDemoAnimals(items=>[...items,animal])}}>Add an animal</button><button aria-pressed={demoNoise} onClick={()=>setDemoNoise(value=>!value)}>{demoNoise?"Return to quiet":"Test loud noise"}</button><button onClick={()=>{setDemo(false);setDemoNoise(false);setTooLoud(false);tooLoudRef.current=false;pressureRef.current=0;recoveryRef.current=0;retreatClock.current=0}}>Exit preview</button></div>}
+        {demo && <div className="cc-demo-controls"><span>Preview · microphone OFF</span><button onClick={()=>void connect(settings.deviceId)}><Mic size={14}/> Use microphone</button><button onClick={()=>{const animal=spawnCreature(sceneLabel,nextArrivalId());setDemoAnimals(items=>[...items,animal])}}>Add an animal</button><button aria-pressed={demoNoise} onClick={()=>setDemoNoise(value=>!value)}>{demoNoise?"Return to quiet":"Test loud noise"}</button><button onClick={()=>{setDemo(false);setDemoNoise(false);setTooLoud(false);tooLoudRef.current=false;pressureRef.current=0;recoveryRef.current=0;retreatClock.current=0}}>Exit preview</button></div>}
         <div className="cc-stage-controls">
           {listening && <button onClick={()=>setRunning(v=>!v)}>{running?<Pause size={17}/>:<Play size={17}/>} {running?"Pause":"Resume"}</button>}
           <button onClick={()=>setResetConfirm(true)} aria-label="Reset scene"><RotateCcw size={17}/></button>
@@ -356,14 +356,14 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
         </section>
         <section>
           <h3><Volume2 size={17}/> Room volume goal</h3>
-          <p>Set how quiet the room should be. Sound values are relative, not decibels.</p>
+          <p>Set how quiet the room should be. Speak normally and check the live meter below. If speaking stays below the goal, lower it or calibrate the room. Values are relative, not decibels.</p>
           <div className="cc-setting-options">
-            {[{label:"Silent",value:12},{label:"Independent",value:24},{label:"Partner work",value:42}].map(p=><button type="button" key={p.label}
+            {[{label:"Silent",value:22},{label:"Independent",value:38},{label:"Partner work",value:58}].map(p=><button type="button" key={p.label}
               className={settings.goal===p.value?"active":""} onClick={()=>updateSetting("goal",p.value)}>{p.label}</button>)}
           </div>
           <label htmlFor="cc-goal">Custom sound goal <strong>{settings.goal} / 100</strong></label>
           <input type="range" id="cc-goal" min="5" max="65" value={settings.goal} onChange={e=>updateSetting("goal",Number(e.target.value))}/>
-          <div className="cc-setting-live"><div className="cc-meter-fill"><i style={{width:`${level}%`}}/><b style={{left:`${settings.goal}%`}}/></div><span>Live level: {listening?level:"Not connected"} / 100</span></div>
+          <div className="cc-setting-live"><div className="cc-meter-fill"><i style={{width:`${level}%`}}/><b style={{left:`${settings.goal}%`}}/></div><span>Live level: {listening?level:"Not connected"} / 100 · Goal: {settings.goal}{listening?(level>settings.goal?" · Above goal":" · Below goal"):""}</span></div>
           <button className="cc-subtle-button" type="button" disabled={!listening||calibrating} onClick={calibrate}>Calibrate to your room</button>
           {calibrating && <p role="status">{calibrationStage==="quiet"?"Keep the room quiet for 5 seconds":"Use normal talking voices for 5 seconds"}… {Math.round(calibrationProgress)}%</p>}
           {calibrationStage==="ready"&&<div><p>Quiet level captured. Next, use normal talking voices.</p><button className="cc-subtle-button" onClick={()=>{calibrationRef.current={elapsed:0,sum:0,samples:0,stage:"talk"};setCalibrationStage("talk");setCalibrationProgress(0);setCalibrating(true)}}>Measure talking level</button></div>}
@@ -376,7 +376,7 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
             <button type="button" className={settings.noiseResponse==="pause"?"active":""} onClick={()=>updateSetting("noiseResponse","pause")}>Pause progress</button>
             <button type="button" className={settings.noiseResponse==="retreat"?"active":""} onClick={()=>updateSetting("noiseResponse","retreat")}>Animals run away</button>
           </div>
-          <p className="cc-hint">In Pause progress mode, earned creatures always stay. In Animals run away mode, creatures visibly run, hop, fly or swim off-screen after sustained noise, then one more leaves every five seconds until the room settles. Your collection remembers every discovery.</p>
+          <p className="cc-hint">In Pause progress mode, earned creatures always stay. In Animals run away mode, the whole group runs, hops, flies or swims off-screen when the room stays too loud. Your collection remembers every discovery. When quiet returns, new animals gradually arrive again.</p>
         </section>
         <section>
           <h3><Clock3 size={17}/> How often friends arrive</h3>
@@ -416,7 +416,7 @@ export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initi
         <section><h3>1. Choose a world</h3><p>Pick a setting to display on a screen or interactive whiteboard. Different classes can explore different worlds.</p></section>
         <section><h3>2. Allow your microphone</h3><p>Press Start listening and allow your browser to use the microphone. It measures volume locally without recording speech.</p></section>
         <section><h3>3. Set the right volume goal</h3><p>Open Settings to choose Silent, Independent or Partner work, or set a custom goal. Select the correct microphone and calibrate if needed.</p></section>
-        <section><h3>4. Find your critters</h3><p>The first friend appears quickly. More gradually arrive while the room stays calm, including more than one of the same animal. There is no one-per-species limit. A dropped pencil or short interruption won't immediately stop the adventure. Longer noise brings temporary cloudy weather.</p></section>
+        <section><h3>4. Find your critters</h3><p>The first friend appears quickly. More gradually arrive while the room stays calm, including more than one of the same animal. There is no one-per-species limit. A dropped pencil or short interruption won't immediately stop the adventure. Longer noise brings temporary cloudy weather and sends the animals running off-screen.</p></section>
         <section><h3>5. Pause when you need to teach</h3><p>Pause to speak to the class without affecting progress. Resume when quiet working begins again. Use the classroom timer for a lesson countdown.</p></section>
         <section><h3>Frequently asked questions</h3>
           <details><summary>Does Calm Critters record our conversations? <ChevronDown size={16}/></summary><p>No. The browser measures a sound level only; no audio is recorded or sent to our servers.</p></details>
