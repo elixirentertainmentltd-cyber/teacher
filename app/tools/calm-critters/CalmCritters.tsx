@@ -8,48 +8,35 @@ import {
   Sparkles, Volume2, X
 } from "lucide-react";
 import "./calm-critters.css";
+import CritterArtwork from "@/components/CritterArtwork";
+import { DEFAULT_SCENES, type CritterScene } from "@/lib/calm-critters-data";
 
-type Habitat = "meadow" | "reef" | "galaxy" | "woodland" | "jungle" | "arctic" | "dinosaurs";
-type Creature = { name: string; emoji: string; left: number; top: number };
+type Habitat = string;
 type NoiseResponse = "pause" | "retreat";
 type Settings = {
   goal: number; arrivalSeconds: number; showMeter: boolean; showCounter: boolean;
   deviceId: string; noiseResponse: NoiseResponse;
 };
-const DEFAULT_SETTINGS: Settings = { goal: 24, arrivalSeconds: 90, showMeter: false, showCounter: true, deviceId: "", noiseResponse: "pause" };
-const POSITIONS = [[15,36],[76,70],[36,73],[81,40],[55,61],[18,70],[65,29],[43,41],[89,75],[30,23],[69,53],[46,80]] as const;
-const habitat = (name: string, tagline: string, emoji: string, animals: [string,string][]) => ({
-  name, tagline, emoji, creatures: animals.map(([animal, icon], i) => ({
-    name: animal, emoji: icon, left: POSITIONS[i][0], top: POSITIONS[i][1]
-  }))
-});
-const HABITATS: Record<Habitat, ReturnType<typeof habitat>> = {
-  meadow: habitat("Rainbow Meadow", "A sunny field full of tiny wonders", "🌼",
-    [["Butterfly","🦋"],["Rabbit","🐰"],["Ladybird","🐞"],["Fox","🦊"],["Hedgehog","🦔"],["Deer","🦌"],["Unicorn","🦄"],["Bee","🐝"],["Mouse","🐭"],["Bird","🐦"],["Snail","🐌"],["Owl","🦉"]]),
-  reef: habitat("Bubble Bay", "Make discoveries under the waves", "🪸",
-    [["Fish","🐠"],["Crab","🦀"],["Dolphin","🐬"],["Octopus","🐙"],["Turtle","🐢"],["Whale","🐳"],["Pufferfish","🐡"],["Seahorse","🐟"],["Shark","🦈"],["Jellyfish","🪼"],["Shell","🐚"],["Seal","🦭"]]),
-  galaxy: habitat("Starlight Valley", "Explore a galaxy of little surprises", "🌌",
-    [["Moon","🌙"],["Rocket","🚀"],["Planet","🪐"],["Star","🌟"],["Alien","👽"],["Satellite","🛰️"],["Flying saucer","🛸"],["Earth","🌍"],["Meteor","☄️"],["Sun","☀️"],["Astronaut","🧑‍🚀"],["Galaxy","🌌"]]),
-  woodland: habitat("Whispering Woods", "Meet curious friends between the trees", "🌲",
-    [["Squirrel","🐿️"],["Fox","🦊"],["Owl","🦉"],["Deer","🦌"],["Hedgehog","🦔"],["Rabbit","🐰"],["Bear","🐻"],["Bird","🐦"],["Mouse","🐭"],["Badger","🦡"],["Wolf","🐺"],["Butterfly","🦋"]]),
-  jungle: habitat("Jungle Jamboree", "Find colourful wildlife in a tropical hideaway", "🌴",
-    [["Parrot","🦜"],["Monkey","🐒"],["Tiger","🐯"],["Sloth","🦥"],["Frog","🐸"],["Toucan","🐦"],["Snake","🐍"],["Gorilla","🦍"],["Crocodile","🐊"],["Butterfly","🦋"],["Elephant","🐘"],["Leopard","🐆"]]),
-  arctic: habitat("Snowflake Shores", "Discover friends in a sparkling snowy world", "❄️",
-    [["Penguin","🐧"],["Polar bear","🐻‍❄️"],["Seal","🦭"],["Fox","🦊"],["Whale","🐳"],["Owl","🦉"],["Wolf","🐺"],["Fish","🐟"],["Rabbit","🐰"],["Snowman","☃️"],["Walrus","🦭"],["Orca","🐋"]]),
-  dinosaurs: habitat("Dinosaur Discovery", "Travel back to a world of prehistoric giants", "🦕",
-    [["Diplodocus","🦕"],["Tyrannosaurus","🦖"],["Egg","🥚"],["Dragonfly","🦋"],["Triceratops","🦕"],["Fern","🌿"],["Raptor","🦖"],["Volcano","🌋"],["Baby dinosaur","🐣"],["Ancient turtle","🐢"],["Pterodactyl","🦅"],["Fossil","🦴"]])
-};
-const KEYS = Object.keys(HABITATS) as Habitat[];
+const DEFAULT_SETTINGS: Settings = { goal: 24, arrivalSeconds: 120, showMeter: false, showCounter: false, deviceId: "", noiseResponse: "pause" };
+const freshCounts = () => Object.fromEntries(DEFAULT_SCENES.map(scene => [scene.id,0])) as Record<string, number>;
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
-const freshCounts = () => Object.fromEntries(KEYS.map(key => [key,0])) as Record<Habitat, number>;
 function readStored<T>(key: string, fallback: T): T {
   try { const value = window.localStorage.getItem(key); return value ? JSON.parse(value) as T : fallback; }
   catch { return fallback; }
 }
 const formatTime = (seconds: number) => `${Math.floor(seconds / 60).toString().padStart(2,"0")}:${(seconds % 60).toString().padStart(2,"0")}`;
 
-export default function CalmCritters() {
-  const [scene, setScene] = useState<Habitat>("meadow");
+export default function CalmCritters({ initialScenes = DEFAULT_SCENES }: { initialScenes?: CritterScene[] }) {
+  const scenes = initialScenes;
+  const HABITATS = Object.fromEntries(scenes.map(s => [s.id,s]));
+  const KEYS = scenes.map(s => s.id);
+  const habitatsRef = useRef(HABITATS);
+  useEffect(() => { habitatsRef.current = HABITATS; });
+  const [showScenes, setShowScenes] = useState(false);
+  const [demo, setDemo] = useState(false);
+  const [demoCount, setDemoCount] = useState(4);
+  const [seen, setSeen] = useState<string[]>([]);
+  const [scene, setScene] = useState<Habitat>(initialScenes[0].id);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [counts, setCounts] = useState<Record<Habitat,number>>(freshCounts);
   const [quietSeconds, setQuietSeconds] = useState(0);
@@ -61,6 +48,9 @@ export default function CalmCritters() {
   const [showGuide, setShowGuide] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [calibrationStage, setCalibrationStage] = useState<"quiet"|"talk"|"ready"|null>(null);
+  const quietBaseline = useRef(0);
+  const retreatClock = useRef(0);
   const [calibrating, setCalibrating] = useState(false);
   const [calibrationProgress, setCalibrationProgress] = useState(0);
   const [resetConfirm, setResetConfirm] = useState(false);
@@ -86,10 +76,10 @@ export default function CalmCritters() {
   const recoveryRef = useRef(0);
   const tooLoudRef = useRef(false);
   const quietRef = useRef(0);
-  const calibrationRef = useRef<{elapsed:number; sum:number; samples:number} | null>(null);
+  const calibrationRef = useRef<{elapsed:number; sum:number; samples:number; stage:"quiet"|"talk"} | null>(null);
   const meterClockRef = useRef(0);
-  const sceneLabel = HABITATS[scene];
-  const discovered = counts[scene];
+  const sceneLabel = HABITATS[scene] || scenes[0];
+  const discovered = demo ? demoCount : (counts[scene] || 0);
   const complete = discovered >= sceneLabel.creatures.length;
   const revealInterval = discovered === 0 ? Math.min(15, settings.arrivalSeconds) : settings.arrivalSeconds;
   const progress = complete ? 100 : clamp(quietSeconds / revealInterval * 100, 0, 100);
@@ -100,20 +90,26 @@ export default function CalmCritters() {
   useEffect(() => {
     const oldSettings = readStored<Partial<Settings>>("tml-calm-critters-settings-v2",{});
     setSettings({...DEFAULT_SETTINGS,...oldSettings});
-    const oldCounts = readStored<Partial<Record<Habitat,number>>>("tml-calm-critters-collections-v2",{});
+    const oldCounts = readStored<Record<Habitat,number>>("tml-calm-critters-collections-v2",{});
     setCounts({...freshCounts(),...oldCounts});
     const oldScene = readStored<Habitat>("tml-calm-critters-scene-v2","meadow");
     if (KEYS.includes(oldScene)) setScene(oldScene);
+    const oldSeen=readStored<Record<string,number>>("tml-calm-critters-seen-v3",oldCounts);
+    setSeen(readStored<string[]>("tml-calm-critters-seen-v4",initialScenes.flatMap(s=>s.creatures.slice(0,oldSeen[s.id]||0).map(c=>c.id))));
     setMounted(true);
   }, []);
-  useEffect(() => { settingsRef.current=settings; if(mounted) localStorage.setItem("tml-calm-critters-settings-v2",JSON.stringify(settings)); },[settings,mounted]);
-  useEffect(() => { countsRef.current=counts; if(mounted) localStorage.setItem("tml-calm-critters-collections-v2",JSON.stringify(counts)); },[counts,mounted]);
+  useEffect(() => { settingsRef.current=settings; if(mounted) try {localStorage.setItem("tml-calm-critters-settings-v2",JSON.stringify(settings));}catch{} },[settings,mounted]);
+  useEffect(() => { countsRef.current=counts; if(mounted) try {localStorage.setItem("tml-calm-critters-collections-v2",JSON.stringify(counts));}catch{} },[counts,mounted]);
   useEffect(() => {
     sceneRef.current=scene;
     quietRef.current=0;
     setQuietSeconds(0);
-    if(mounted) localStorage.setItem("tml-calm-critters-scene-v2",JSON.stringify(scene));
+    if(mounted) try {localStorage.setItem("tml-calm-critters-scene-v2",JSON.stringify(scene));}catch{}
   },[scene,mounted]);
+  useEffect(() => {
+    setSeen(previous => [...new Set([...previous,...scenes.flatMap(s=>s.creatures.slice(0,counts[s.id]||0).map(c=>c.id))])]);
+  },[counts]);
+  useEffect(() => { if(mounted) try {localStorage.setItem("tml-calm-critters-seen-v4",JSON.stringify(seen));}catch{} },[seen,mounted]);
   useEffect(() => { runningRef.current=running; if(!running) { pressureRef.current=0; recoveryRef.current=0; tooLoudRef.current=false; setTooLoud(false); } },[running]);
   useEffect(() => {
     if(!timerRunning) return;
@@ -142,7 +138,7 @@ export default function CalmCritters() {
     void audio.current?.close().catch(()=>{});
     audio.current=null; frameTime.current=null;
     setListening(false); setRunning(false); setLevel(0);
-    setCalibrating(false); calibrationRef.current=null;
+    setCalibrating(false); setCalibrationStage(null); calibrationRef.current=null;
   },[]);
   useEffect(() => () => {
     active.current=false;
@@ -156,13 +152,16 @@ export default function CalmCritters() {
       return;
     }
     setError("");
+    setDemo(false);
     stopMicrophone();
     try {
       const microphone=await navigator.mediaDevices.getUserMedia({
         audio: { ...(deviceId ? {deviceId:{exact:deviceId}} : {}), echoCancellation:true, noiseSuppression:false },
         video:false
       });
+      stream.current=microphone;
       const context=new AudioContext();
+      audio.current=context;
       await context.resume();
       const input=context.createMediaStreamSource(microphone);
       const meter=context.createAnalyser();
@@ -204,7 +203,9 @@ export default function CalmCritters() {
           cal.sum+=measured; cal.samples++;
           setCalibrationProgress(clamp(cal.elapsed/5*100,0,100));
           if(cal.elapsed>=5) {
-            updateSetting("goal",clamp(Math.round(cal.sum/cal.samples)+10,5,65));
+            const mean=cal.sum/cal.samples;
+            if(cal.stage==="quiet") { quietBaseline.current=mean;setCalibrationStage("ready"); }
+            else { updateSetting("goal",clamp(Math.round(quietBaseline.current+Math.max(8,(mean-quietBaseline.current)*.45)),5,65));setCalibrationStage(null); }
             calibrationRef.current=null; setCalibrating(false);
           }
         } else if(runningRef.current) {
@@ -214,15 +215,17 @@ export default function CalmCritters() {
             pressureRef.current=clamp(pressureRef.current+(excessive?
               (1+Math.pow((measured-goal)/12,2))*delta : -1.4*delta),0,6);
             if(pressureRef.current>=6) {
-              tooLoudRef.current=true; recoveryRef.current=0; setTooLoud(true);
+              tooLoudRef.current=true; recoveryRef.current=0;retreatClock.current=0; setTooLoud(true);
               if(settingsRef.current.noiseResponse==="retreat") {
                 const key=sceneRef.current;
-                const updated={...countsRef.current,[key]:Math.max(0,countsRef.current[key]-1)};
+                const updated={...countsRef.current,[key]:Math.max(0,(countsRef.current[key]||0)-1)};
                 countsRef.current=updated; setCounts(updated);
               }
             }
           } else {
             recoveryRef.current=excessive?0:recoveryRef.current+delta;
+            retreatClock.current=excessive?retreatClock.current+delta:0;
+            if(settingsRef.current.noiseResponse==="retreat"&&retreatClock.current>=5){const key=sceneRef.current;const updated={...countsRef.current,[key]:Math.max(0,(countsRef.current[key]||0)-1)};countsRef.current=updated;setCounts(updated);retreatClock.current=0;}
             if(recoveryRef.current>=3) {
               tooLoudRef.current=false; pressureRef.current=0;
               recoveryRef.current=0; setTooLoud(false);
@@ -230,13 +233,13 @@ export default function CalmCritters() {
           }
           if(!tooLoudRef.current && !calibrationRef.current && !excessive) {
             const key=sceneRef.current;
-            const limit=HABITATS[key].creatures.length;
-            const seconds=countsRef.current[key]===0?Math.min(15,settingsRef.current.arrivalSeconds):settingsRef.current.arrivalSeconds;
-            if(countsRef.current[key]<limit) {
+            const limit=habitatsRef.current[key]?.creatures.length || 0;
+            const seconds=!countsRef.current[key]?Math.min(15,settingsRef.current.arrivalSeconds):settingsRef.current.arrivalSeconds;
+            if((countsRef.current[key]||0)<limit) {
               quietRef.current+=delta;
               if(quietRef.current>=seconds) {
                 quietRef.current=0;
-                const updated={...countsRef.current,[key]:countsRef.current[key]+1};
+                const updated={...countsRef.current,[key]:(countsRef.current[key]||0)+1};
                 countsRef.current=updated; setCounts(updated);
               }
               setQuietSeconds(quietRef.current);
@@ -250,16 +253,32 @@ export default function CalmCritters() {
     return () => cancelAnimationFrame(raf);
   },[listening]);
 
+  useEffect(() => {
+    if(!showSettings && !showGuide && !showCollection && !resetConfirm) return;
+    const previous=document.activeElement as HTMLElement | null;
+    const dialog=document.querySelector<HTMLElement>(".cc-dialog,.cc-drawer");
+    const focusable=()=>Array.from(dialog?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select,summary,a[href]')||[]);
+    focusable()[0]?.focus();
+    const key=(e:KeyboardEvent)=>{
+      if(e.key==="Escape") {setShowSettings(false);setShowGuide(false);setShowCollection(false);setResetConfirm(false);}
+      if(e.key==="Tab") { const nodes=focusable(); const first=nodes[0],last=nodes[nodes.length-1]; if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();} }
+    };
+    document.addEventListener("keydown",key);
+    return ()=>{document.removeEventListener("keydown",key);previous?.focus();};
+  },[showSettings,showGuide,showCollection,resetConfirm]);
+
   const resetHabitat=() => {
     const updated={...countsRef.current,[scene]:0};
     countsRef.current=updated; setCounts(updated); quietRef.current=0; setQuietSeconds(0);
     pressureRef.current=0; recoveryRef.current=0; setTooLoud(false); tooLoudRef.current=false;
+    if(demo) setDemoCount(0);
     setResetConfirm(false);
   };
   const calibrate=() => {
     if(!listening) { setError("Start listening before calibrating the room."); return; }
     setRunning(false);
-    calibrationRef.current={elapsed:0,sum:0,samples:0};
+    calibrationRef.current={elapsed:0,sum:0,samples:0,stage:"quiet"};
+    setCalibrationStage("quiet");
     setCalibrationProgress(0); setCalibrating(true); setShowSettings(true);
     setError("");
   };
@@ -270,108 +289,58 @@ export default function CalmCritters() {
     } catch { setError("Full-screen mode is unavailable in this browser."); }
   };
 
-  return <div className="cc-v2">
+  return <div className="cc-v2" ref={sceneEl as React.RefObject<HTMLDivElement>}>
     <div className="cc-shell">
       <nav className="cc-navigation" aria-label="Activity navigation">
         <Link href="/tools"><ArrowLeft size={17}/> Classroom tools</Link>
         <span className="cc-brand">TEACH ME A LESSON <span>•</span> BY WE ARE ELIXIR</span>
       </nav>
-      <header className="cc-heading">
-        <div>
-          <span className="cc-kicker"><Sparkles size={15}/> AN INTERACTIVE CLASSROOM ADVENTURE</span>
-          <h1>Calm <span>Critters</span><span aria-hidden="true"> ✨</span></h1>
-          <p>Every quiet moment brings a new friend out of hiding. Fill your scene together, at your own pace.</p>
-        </div>
-        <div className="cc-top-actions">
-          <button type="button" onClick={() => setShowGuide(true)}><HelpCircle size={17}/> How it works</button>
-          <button type="button" onClick={() => setShowCollection(true)}><BookOpen size={17}/> Collection</button>
-          <button type="button" onClick={() => setShowSettings(true)}><Settings2 size={17}/> Settings</button>
-        </div>
-      </header>
-      <div className="cc-habitat-bar">
-        <div className="cc-habitat-tabs" role="group" aria-label="Select an adventure">
-          {KEYS.map(key => <button type="button" key={key} onClick={()=>setScene(key)}
-            className={scene===key?"cc-selected":""} aria-pressed={scene===key}>
-            <span aria-hidden="true">{HABITATS[key].emoji}</span> {HABITATS[key].name}
-          </button>)}
-        </div>
-      </div>
-      <section ref={sceneEl} className={`cc-adventure cc-${scene}`} aria-label={sceneLabel.name}>
-        <div className="cc-landscape cc-landscape-back" aria-hidden="true"/>
-        <div className="cc-landscape cc-landscape-front" aria-hidden="true"/>
-        <div className="cc-sun" aria-hidden="true"/>
-        <div className="cc-sparkle cc-star-one" aria-hidden="true">✦</div>
-        <div className="cc-sparkle cc-star-two" aria-hidden="true">✧</div>
+      <section className={`cc-adventure cc-${scene} ${tooLoud ? "cc-noisy" : ""}`} aria-label={sceneLabel.name}>
+        <div className="cc-painted-world" style={{backgroundImage:`url(${sceneLabel.background})`}} aria-hidden="true"/>
         <div className="cc-scene-toolbar">
-          <div className="cc-scene-name"><strong>{sceneLabel.emoji} {sceneLabel.name}</strong><small>{sceneLabel.tagline}</small></div>
-          <button type="button" onClick={fullscreen} title={isFullscreen?"Exit full screen":"Enter full screen"}><Expand size={17}/> {isFullscreen?"Exit":"Full screen"}</button>
+          <button type="button" className="cc-world-picker" onClick={()=>setShowScenes(v=>!v)} aria-expanded={showScenes}>
+            <img src={sceneLabel.background} alt=""/><span><strong>{sceneLabel.name}</strong><small>Change your world</small></span><ChevronDown size={17}/>
+          </button>
+          <div className="cc-top-actions">
+            <button type="button" onClick={()=>setShowGuide(true)} aria-label="How it works"><HelpCircle size={18}/></button>
+            <button type="button" onClick={()=>setShowCollection(true)} aria-label="Creature collection"><BookOpen size={18}/></button>
+            <button type="button" onClick={()=>setShowSettings(true)} aria-label="Settings"><Settings2 size={18}/></button>
+            <button type="button" onClick={fullscreen} aria-label={isFullscreen?"Exit full screen":"Full screen"}><Expand size={18}/></button>
+          </div>
         </div>
+        {showScenes && <div className="cc-world-menu" role="group" aria-label="Choose a world">{scenes.map(world=><button key={world.id} onClick={()=>{setScene(world.id);setDemoCount(4);setShowScenes(false)}} aria-pressed={scene===world.id}>
+          <img src={world.background} alt=""/><span><strong>{world.name}</strong><small>{world.tagline}</small></span>{scene===world.id&&<Check size={17}/>}
+        </button>)}</div>}
         {settings.showMeter && listening && <div className="cc-screen-meter">
           <span><Volume2 size={15}/> {tooLoud?"Time to settle":level>settings.goal?"A little louder":"Lovely and calm"}</span>
           <div className="cc-meter-fill"><i style={{width:`${level}%`}}/><b style={{left:`${settings.goal}%`}}/></div>
         </div>}
         {sceneLabel.creatures.slice(0,discovered).map((animal,i)=>
-          <div key={animal.name} className="cc-animal" style={{left:`${animal.left}%`,top:`${animal.top}%`,animationDelay:`${i*.08}s`}}
-            role="img" aria-label={animal.name} title={animal.name}><span>{animal.emoji}</span></div>
+          <div key={animal.id} className="cc-animal" style={{left:`${animal.left}%`,top:`${animal.top}%`,width:`${animal.size}%`,zIndex:Math.round(animal.top),animationDelay:`${i*.08}s`}}
+            role="img" aria-label={animal.name} title={animal.name}><CritterArtwork image={animal.image}/><span className="cc-animal-label">{animal.name}</span></div>
         )}
-        {!listening && discovered===0 && <div className="cc-start-overlay">
-          <span aria-hidden="true">🌈</span><h2>A world of wonder awaits</h2>
+        {!listening && !demo && <div className="cc-start-overlay">
+          <span className="cc-welcome-kicker">TEACH ME A LESSON</span><h1>Calm <em>Critters</em></h1><h2>Let quiet bring your world to life.</h2>
           <p>Allow your microphone, then see who comes out when your classroom gets quiet.</p>
           <button type="button" onClick={()=>void connect(settings.deviceId)}><Mic size={20}/> Start listening</button>
-          <small>No account. No recording. Completely free.</small>
+          <button type="button" className="cc-preview-link" onClick={()=>{setDemo(true);setDemoCount(4)}}>Preview the artwork without a microphone</button><small>No account. No recording. Completely free.</small>
         </div>}
-        {tooLoud && running && <div className="cc-weather-overlay" aria-live="polite"><div className="cc-weather-message">☁️ A little more quiet, please</div></div>}
-        {!running && listening && <div className="cc-paused-banner">⏸ Adventure paused</div>}
+        {tooLoud && running && <div className="cc-weather-overlay" aria-live="polite"><div className="cc-weather-message">Let’s settle and watch the world clear</div></div>}
+        {!running && listening && <div className="cc-paused-banner">Adventure paused</div>}
         {timerLeft!==null && <div className="cc-timer-badge"><Clock3 size={18}/> {formatTime(timerLeft)}{timerLeft===0?" • Time's up!":""}</div>}
         <div className="cc-scene-bottom">
           {settings.showCounter && <span>{discovered} / {sceneLabel.creatures.length} friends discovered</span>}
-          <span>{complete?"Amazing! Every friend is here 🎉":tooLoud?"Our friends are waiting for calm":running?"Quiet moments bring new friends":"Ready for your adventure"}</span>
+          <span>{complete?"Amazing! Every friend is here":tooLoud?"Our friends are waiting for calm":running?"Quiet moments bring new friends":"Ready for your adventure"}</span>
+        </div>
+        {demo && <div className="cc-demo-controls"><span>Artwork preview · microphone off</span><button onClick={()=>setDemoCount(v=>Math.min(sceneLabel.creatures.length,v+1))} disabled={demoCount>=sceneLabel.creatures.length}>Reveal a friend</button><button onClick={()=>setDemo(false)}>Exit preview</button></div>}
+        <div className="cc-stage-controls">
+          {listening && <button onClick={()=>setRunning(v=>!v)}>{running?<Pause size={17}/>:<Play size={17}/>} {running?"Pause":"Resume"}</button>}
+          <button onClick={()=>setResetConfirm(true)} aria-label="Reset scene"><RotateCcw size={17}/></button>
+          <span>Calm Critters <i>Teach Me a Lesson by We Are Elixir</i></span>
+          <button onClick={()=>setShowSettings(true)}><Settings2 size={17}/> Teacher settings</button>
         </div>
       </section>
-      <div className="cc-command-bar" aria-label="Classroom activity controls">
-        <div className="cc-command-buttons">
-          {!listening?<button className="cc-primary" type="button" onClick={()=>void connect(settings.deviceId)}><Mic size={18}/> Start listening</button>:
-            <button className="cc-primary" type="button" onClick={()=>setRunning(v=>!v)}>{running?<Pause size={18}/>:<Play size={18}/>} {running?"Pause":"Resume"}</button>}
-          {listening && <button type="button" onClick={stopMicrophone}><MicOff size={17}/> Disconnect</button>}
-          <button type="button" onClick={()=>setResetConfirm(true)}><RotateCcw size={16}/> Reset scene</button>
-          <button type="button" onClick={()=>setShowSettings(true)}><Settings2 size={17}/> Settings</button>
-        </div>
-        <div className="cc-quiet-progress">
-          <div><strong>{complete?"All friends found":"Next friend"}</strong><span>{complete?"100%":`${Math.floor(progress)}%`}</span></div>
-          <div className="cc-quiet-track" role="progressbar" aria-label="Progress to next creature" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.floor(progress)}><span style={{width:`${progress}%`}}/></div>
-          <small>{complete?"Switch scenes to discover more!":`First arrival after 15 seconds, then about every ${settings.arrivalSeconds<60?settings.arrivalSeconds+" seconds":Math.round(settings.arrivalSeconds/60)+" minutes"} of calm.`}</small>
-        </div>
-      </div>
       {error && <p role="alert" className="cc-error">{error}</p>}
-      <section className="cc-below">
-        <div className="cc-panel">
-          <div className="cc-panel-heading"><Clock3 size={20}/><h2>Classroom timer</h2></div>
-          <p>Set a lesson countdown to keep the class on track.</p>
-          <div className="cc-timer-actions">
-            <label>Length <select value={timerLength} onChange={e=>setTimerLength(Number(e.target.value))}>
-              {[5,10,15,20,30,45,60].map(minutes=><option key={minutes} value={minutes}>{minutes} minutes</option>)}
-            </select></label>
-            <button type="button" onClick={()=>{if(timerLeft===null||timerLeft===0) setTimerLeft(timerLength*60);setTimerRunning(true)}}><Play size={16}/> {timerLeft===null||timerLeft===0?"Start":"Resume"}</button>
-            <button type="button" onClick={()=>setTimerRunning(false)}><Pause size={16}/> Pause</button>
-            <button type="button" onClick={()=>{setTimerRunning(false);setTimerLeft(null)}}><RotateCcw size={16}/> Clear</button>
-          </div>
-          {timerLeft!==null && <strong className="cc-timer-readout">{formatTime(timerLeft)}</strong>}
-        </div>
-        <div className="cc-panel">
-          <div className="cc-panel-heading"><ShieldCheck size={20}/><h2>Private by design</h2></div>
-          <p>Sound is measured in your browser on your own device. Audio is never recorded, transmitted or stored. Classroom choices and collected creatures are saved in this browser only.</p>
-          <p>Best used with a classroom microphone and a screen everyone can see. A secure HTTPS connection is required for microphone permission.</p>
-        </div>
-      </section>
-      <section className="cc-explainer" aria-label="How Calm Critters works">
-        <div className="cc-section-head"><span>THE SIMPLE IDEA</span><h2>A little quiet. A lot of discovery.</h2></div>
-        <div className="cc-explainer-grid">
-          <article><span>01</span><h3>Choose a world</h3><p>Pick one of seven colourful adventures. Each world keeps the creatures you've discovered on this device.</p></article>
-          <article><span>02</span><h3>Set your goal</h3><p>Choose silent, independent or partner work and adjust the sound goal to suit your classroom.</p></article>
-          <article><span>03</span><h3>Watch friends appear</h3><p>As your room settles, more creatures come out. Brief noises won't take away what you've earned.</p></article>
-        </div>
-      </section>
-      <div className="cc-bottom-note">Calm Critters is an original Teach Me a Lesson classroom tool • Part of We Are Elixir • Free for everyone</div>
     </div>
     {resetConfirm && <div className="cc-modal-backdrop" role="presentation"><div className="cc-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cc-reset-title">
       <h2 id="cc-reset-title">Start this scene again?</h2>
@@ -390,6 +359,7 @@ export default function CalmCritters() {
             {devices.filter(d=>d.deviceId).map((d,i)=><option key={d.deviceId} value={d.deviceId}>{d.label||`Microphone ${i+1}`}</option>)}
           </select>
           <button className="cc-subtle-button" type="button" onClick={()=>void refreshDevices()}>Refresh microphone list</button>
+          {listening && <button className="cc-subtle-button" type="button" onClick={stopMicrophone}><MicOff size={15}/> Disconnect microphone</button>}
           {!listening && <button className="cc-subtle-button" type="button" onClick={()=>void connect(settings.deviceId)}>Connect microphone</button>}
         </section>
         <section>
@@ -402,18 +372,19 @@ export default function CalmCritters() {
           <label htmlFor="cc-goal">Custom sound goal <strong>{settings.goal} / 100</strong></label>
           <input type="range" id="cc-goal" min="5" max="65" value={settings.goal} onChange={e=>updateSetting("goal",Number(e.target.value))}/>
           <div className="cc-setting-live"><div className="cc-meter-fill"><i style={{width:`${level}%`}}/><b style={{left:`${settings.goal}%`}}/></div><span>Live level: {listening?level:"Not connected"} / 100</span></div>
-          <button className="cc-subtle-button" type="button" disabled={!listening||calibrating} onClick={calibrate}>Calibrate to your room (5 seconds)</button>
-          {calibrating && <p role="status">Keep the room quiet while we listen… {Math.round(calibrationProgress)}%</p>}
-          <p className="cc-hint">Calibration is optional. Pause any lesson activity while you calibrate, then resume it afterwards.</p>
+          <button className="cc-subtle-button" type="button" disabled={!listening||calibrating} onClick={calibrate}>Calibrate to your room</button>
+          {calibrating && <p role="status">{calibrationStage==="quiet"?"Keep the room quiet for 5 seconds":"Use normal talking voices for 5 seconds"}… {Math.round(calibrationProgress)}%</p>}
+          {calibrationStage==="ready"&&<div><p>Quiet level captured. Next, use normal talking voices.</p><button className="cc-subtle-button" onClick={()=>{calibrationRef.current={elapsed:0,sum:0,samples:0,stage:"talk"};setCalibrationStage("talk");setCalibrationProgress(0);setCalibrating(true)}}>Measure talking level</button></div>}
+          <p className="cc-hint">Calibration is optional: measure five seconds of quiet, then five seconds of normal talking. Resume the activity afterwards.</p>
         </section>
         <section>
           <h3><SlidersHorizontal size={17}/> When the room gets noisy</h3>
           <p>A brief interruption is ignored. Sustained noise shows a gentle weather effect.</p>
           <div className="cc-setting-options">
             <button type="button" className={settings.noiseResponse==="pause"?"active":""} onClick={()=>updateSetting("noiseResponse","pause")}>Pause progress</button>
-            <button type="button" className={settings.noiseResponse==="retreat"?"active":""} onClick={()=>updateSetting("noiseResponse","retreat")}>One friend hides</button>
+            <button type="button" className={settings.noiseResponse==="retreat"?"active":""} onClick={()=>updateSetting("noiseResponse","retreat")}>Friends retreat</button>
           </div>
-          <p className="cc-hint">In Pause progress mode, earned creatures always stay. In One friend hides mode, one creature retreats after sustained noise.</p>
+          <p className="cc-hint">In Pause progress mode, earned creatures always stay. In Friends retreat mode, creatures leave after sustained noise and every five seconds until the room settles. Your collection remembers every discovery.</p>
         </section>
         <section>
           <h3><Clock3 size={17}/> How often friends arrive</h3>
@@ -430,6 +401,19 @@ export default function CalmCritters() {
           <label className="cc-switch"><span>Show live room sound meter</span><input type="checkbox" checked={settings.showMeter} onChange={e=>updateSetting("showMeter",e.target.checked)}/></label>
           <label className="cc-switch"><span>Show discovered-friends counter</span><input type="checkbox" checked={settings.showCounter} onChange={e=>updateSetting("showCounter",e.target.checked)}/></label>
           <button type="button" className="cc-subtle-button" onClick={()=>{setShowSettings(false);setShowCollection(true)}}>Open creature collection</button>
+        </section>
+        <section>
+          <div className="cc-panel-heading"><Clock3 size={20}/><h2>Classroom timer</h2></div>
+          <p>Set a lesson countdown to keep the class on track.</p>
+          <div className="cc-timer-actions">
+            <label>Length <select value={timerLength} onChange={e=>setTimerLength(Number(e.target.value))}>
+              {[5,10,15,20,30,45,60].map(minutes=><option key={minutes} value={minutes}>{minutes} minutes</option>)}
+            </select></label>
+            <button type="button" onClick={()=>{if(timerLeft===null||timerLeft===0) setTimerLeft(timerLength*60);setTimerRunning(true)}}><Play size={16}/> {timerLeft===null||timerLeft===0?"Start":"Resume"}</button>
+            <button type="button" onClick={()=>setTimerRunning(false)}><Pause size={16}/> Pause</button>
+            <button type="button" onClick={()=>{setTimerRunning(false);setTimerLeft(null)}}><RotateCcw size={16}/> Clear</button>
+          </div>
+          {timerLeft!==null && <strong className="cc-timer-readout">{formatTime(timerLeft)}</strong>}
         </section>
         <p className="cc-drawer-foot">Your settings are remembered in this browser. Microphone audio is never stored or uploaded.</p>
       </aside>
@@ -453,9 +437,9 @@ export default function CalmCritters() {
     {showCollection && <div className="cc-modal-backdrop cc-drawer-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCollection(false)}}>
       <aside className="cc-drawer" role="dialog" aria-modal="true" aria-labelledby="cc-collection-title">
         <div className="cc-drawer-title"><div><span>YOUR DISCOVERIES</span><h2 id="cc-collection-title">Creature collection</h2></div><button aria-label="Close collection" onClick={()=>setShowCollection(false)}><X size={20}/></button></div>
-        {KEYS.map(key=><section key={key}><h3>{HABITATS[key].emoji} {HABITATS[key].name} <small>{counts[key]}/{HABITATS[key].creatures.length}</small></h3>
-          <div className="cc-collection-grid">{HABITATS[key].creatures.map((animal,i)=><div key={animal.name} className={i<counts[key]?"found":"missing"} title={i<counts[key]?animal.name:"Not discovered yet"}>
-            <span>{i<counts[key]?animal.emoji:"?"}</span><small>{i<counts[key]?animal.name:"Hidden"}</small>
+        {KEYS.map(key=><section key={key}><h3>{HABITATS[key].name} <small>{HABITATS[key].creatures.filter(c=>seen.includes(c.id)).length}/{HABITATS[key].creatures.length}</small></h3>
+          <div className="cc-collection-grid">{HABITATS[key].creatures.map((animal,i)=><div key={animal.id} className={seen.includes(animal.id)?"found":"missing"} title={seen.includes(animal.id)?animal.name:"Not discovered yet"}>
+            {seen.includes(animal.id)?<CritterArtwork image={animal.image} alt={animal.name}/>:<span>?</span>}<small>{seen.includes(animal.id)?animal.name:"Hidden"}</small>
           </div>)}</div></section>)}
         <p className="cc-drawer-foot">Your collection is stored locally on this device. Clearing browser data may reset it.</p>
       </aside>
