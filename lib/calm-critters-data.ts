@@ -1,4 +1,4 @@
-export type Creature = { id: string; name: string; image: string; left: number; top: number; size: number; motion?: "walk" | "hop" | "fly" | "swim" | "drift" | "still" };
+export type Creature = { id: string; name: string; image: string; left: number; top: number; size: number; facing?: "left" | "right"; motion?: "walk" | "hop" | "fly" | "swim" | "drift" | "still" };
 export type CritterScene = { id: string; name: string; tagline: string; background: string; published: boolean; revision: number; creatures: Creature[] };
 export const DEFAULT_SCENES: CritterScene[] = [
   {

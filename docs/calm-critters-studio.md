@@ -50,3 +50,9 @@ Microphone samples now use floating-point time-domain data and a logarithmic rel
 A sustained threshold breach now sends the entire group off-screen together. The preview clearly states that its microphone is OFF and provides a Use microphone button. The settings meter explicitly shows the live level, the goal, and whether the input is above or below it. Sound-response elapsed time now tolerates one-second frames so a slow projector does not stretch a few seconds of noise into a much longer wait. Brief-spike protection and collection retention are unchanged.
 
 Regression checks cover synthetic quiet/voice waveforms through the same sample-conversion and noise-response functions used by the microphone path, slow frames, and retention of every group member during exit animations. A real classroom microphone is still needed for device-specific validation.
+
+## Facing direction correction
+
+The arctic wolf footage exposed an assumption that every illustration faced right. Native artwork direction is now tracked for all source sheets, with explicit left-facing entries for the woodland fox/deer, seahorse, arctic seal/fox/wolf/fish and meteor. The animation normalises artwork orientation before applying its walking, swimming, flying and escape directions. Saved scenes automatically inherit this correction through their image reference.
+
+Travel and turning share the same duration and phase, including flying and swimming. Walking/swimming turn at the halfway point; the curved flight route turns at 70%, where its horizontal direction reverses. Escaping animals face their exit edge. New uploaded creatures can set **Original artwork faces → Left/Right** in the admin studio. The source artwork files remain unchanged.

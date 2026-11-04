@@ -76,3 +76,21 @@ test('removing a whole population retains every animal for the escape animation'
  const group=data.DEFAULT_SCENES[0].creatures.slice(0,4).map(creature=>({creature,leaving:false}));
  const actors=motion.reconcileActors(group,[],true);assert.equal(actors.length,4);assert.equal(actors.filter(a=>a.leaving).length,4);
 });
+
+test('left-facing wolf artwork is normalised before walking and running away',()=>{
+ const wolf=data.DEFAULT_SCENES.find(s=>s.id==='arctic').creatures.find(c=>c.name==='Wolf');
+ const native=-1,normalisation=motion.artworkFacing(wolf);
+ assert.equal(normalisation,-1);
+ for(const travelDirection of [-1,1])assert.equal(native*normalisation*travelDirection,travelDirection);
+ // Saved or duplicated animals use the image reference, not the instance ID or display name.
+ assert.equal(motion.artworkFacing({...wolf,id:'saved-instance',name:'Custom wolf'}),-1);
+});
+test('native left-facing sheets and uploaded facing overrides are respected',()=>{
+ for(const [world,cell] of [['woodland',1],['woodland',3],['reef',7],['arctic',2],['arctic',3],['arctic',6],['arctic',7],['galaxy',8]])assert.equal(motion.artworkFacing({image:`/calm-critters/${world}/sprites.webp#${cell}`}),-1);
+ assert.equal(motion.artworkFacing({image:'/api/media/42',facing:'left'}),-1);
+ assert.equal(motion.artworkFacing({image:'/api/media/42',facing:'right'}),1);
+ const scene=structuredClone(data.DEFAULT_SCENES[0]);scene.creatures[0].facing='left';assert.equal(validateScene(scene),true);scene.creatures[0].facing='up';assert.equal(validateScene(scene),false);
+});
+test('turning and travel use the same movement duration',()=>{
+ assert.equal(motion.motionDuration('fly',5),12);assert.equal(motion.motionDuration('swim',5),17);assert.equal(motion.motionDuration('drift',5),26);assert.equal(motion.motionDuration('walk',5),19);
+});
