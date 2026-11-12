@@ -39,7 +39,7 @@ export function validateBank(raw:unknown):Omit<WordBank,"id">|null{
  const stage=b.stage;
  const yearGroup="";
  const published=b.published===true;
- if(!["KS1","KS2","KS3","KS4"].includes(String(stage))||!Number.isInteger(wordLength)||wordLength<4||wordLength>12||!Array.isArray(b.cases)||b.cases.length<1||b.cases.length>100)return null;
+ if(!["KS1","KS2","KS3","KS4"].includes(String(stage))||!Number.isInteger(wordLength)||wordLength<4||wordLength>12||!Array.isArray(b.cases)||b.cases.length<1||b.cases.length>500)return null;
  const cases=b.cases.map(cleanCase);
  if(cases.some(c=>!c))return null;
  const words=cases.map(c=>c!.word);
