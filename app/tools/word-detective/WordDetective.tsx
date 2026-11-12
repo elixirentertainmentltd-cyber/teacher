@@ -20,7 +20,6 @@ export default function WordDetective(){
   const [message,setMessage]=useState("");
   const [ready,setReady]=useState(false);
   const [showInstructions,setShowInstructions]=useState(false);
-  const [showExample,setShowExample]=useState(false);
   const [copied,setCopied]=useState(false);
   useEffect(()=>{setDate(dateInUK());},[]);
   useEffect(()=>{const timer=window.setInterval(()=>setDate(dateInUK()),60000);return()=>window.clearInterval(timer);},[]);
