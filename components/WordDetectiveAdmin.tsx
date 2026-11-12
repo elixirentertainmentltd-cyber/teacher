@@ -1,10 +1,11 @@
 "use client";
 import {useEffect,useMemo,useState,type ChangeEvent,type FormEvent} from "react";
-import type {WordCase,Stage} from "@/lib/word-detective";
+import {STAGE_WORD_LENGTH,type WordCase,type Stage} from "@/lib/word-detective";
 type Bank={id:number;title:string;subject:string;stage:Stage;yearGroup:string;wordLength:number;published:boolean;cases:WordCase[]};
 const stages:Stage[]=["KS1","KS2","KS3","KS4"];
-const blank=():Bank=>({id:0,title:"",subject:"Vocabulary",stage:"KS2",yearGroup:"",wordLength:5,published:false,cases:[]});
-const label=(bank:Bank)=>bank.stage+" · "+(bank.wordLength?bank.wordLength+"-letter words":"mixed-length legacy bank");
+const blank=():Bank=>({id:0,title:"",subject:"Vocabulary",stage:"KS2",yearGroup:"",wordLength:STAGE_WORD_LENGTH.KS2,published:false,cases:[]});
+const stageName=(stage:Stage)=>stage==="KS4"?"GCSE":stage;
+const label=(bank:Bank)=>stageName(bank.stage);
 const makeCase=(word:string,old?:WordCase):WordCase=>old?{...old,word}:{word,clue:"Solve the mystery using the coloured letter clues.",example:"The mystery word was "+word.toLowerCase()+"."};
 function parseWords(text:string,length:number){
  const parts=text.split(/[\r\n,;\t]+/).map(s=>s.trim().toUpperCase()).filter(Boolean).filter(s=>s!=="WORD"&&s!=="WORDS");
@@ -23,7 +24,7 @@ export default function WordDetectiveAdmin(){
  const existing=useMemo(()=>new Map(form.cases.map(item=>[item.word,item])),[form.cases]);
  async function load(){const response=await fetch("/api/admin/word-detective",{cache:"no-store"});const data=await response.json();if(!response.ok)throw Error(data.error||"Could not load banks");setBanks(data.banks);}
  useEffect(()=>{void load().catch(e=>setMessage(e.message));},[]);
- function edit(bank:Bank){setForm({...bank,wordLength:bank.wordLength||5,cases:bank.cases.map(c=>({...c}))});setList(bank.cases.map(c=>c.word).join("\n"));setShowForm(true);setMessage("");window.scrollTo({top:0,behavior:"smooth"});}
+ function edit(bank:Bank){setForm({...bank,wordLength:STAGE_WORD_LENGTH[bank.stage],cases:bank.cases.map(c=>({...c}))});setList(bank.cases.map(c=>c.word).join("\n"));setShowForm(true);setMessage("");window.scrollTo({top:0,behavior:"smooth"});}
  function reset(){setForm(blank());setList("");setShowForm(false);}
  function start(){reset();setShowForm(true);setMessage("");}
  async function upload(event:ChangeEvent<HTMLInputElement>){
@@ -45,13 +46,13 @@ export default function WordDetectiveAdmin(){
   }catch(error){setMessage(error instanceof Error?error.message:"Could not save");}finally{setBusy(false);}
  }
  async function remove(bank:Bank){if(!confirm("Delete "+label(bank)+" and all its words?"))return;setBusy(true);setMessage("");try{const response=await fetch("/api/admin/word-detective",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:bank.id})});const data=await response.json();if(!response.ok)throw Error(data.error||"Could not delete");await load();if(form.id===bank.id)reset();setMessage("Bank deleted.");}catch(error){setMessage(error instanceof Error?error.message:"Could not delete");}finally{setBusy(false);}}
- return <section className="wd-admin"><h2>Word Detective studio</h2><p>Select a key stage and word length, then <strong>paste all your words at once</strong> or upload a TXT/CSV list. No individual word forms needed.</p>
+ return <section className="wd-admin"><h2>Word Detective studio</h2><p>Choose <strong>KS1, KS2, KS3 or GCSE</strong>. The required word length is set automatically. Then <strong>paste all your words at once</strong> or upload a TXT/CSV list. No individual word forms needed.</p>
  {message&&<p className="admin-message" role="status">{message}</p>}
  {!showForm&&<button type="button" className="button button-primary" onClick={start}>+ Create word bank</button>}
  {showForm&&<div className="admin-panel"><h3>{form.id?"Edit word bank":"Create word bank"}</h3><form onSubmit={save} className="admin-form">
  <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
- <label className="field-label" style={{flex:"1 1 180px"}}>Key stage<select value={form.stage} onChange={e=>setForm({...form,stage:e.target.value as Stage})}>{stages.map(s=><option key={s} value={s}>{s}</option>)}</select></label>
- <label className="field-label" style={{flex:"1 1 180px"}}>Letters per word<select value={form.wordLength} onChange={e=>setForm({...form,wordLength:Number(e.target.value)})}>{Array.from({length:9},(_,i)=>i+4).map(n=><option key={n} value={n}>{n} letters</option>)}</select></label>
+ <label className="field-label" style={{flex:"1 1 180px"}}>Key stage<select value={form.stage} onChange={e=>{const stage=e.target.value as Stage;setForm({...form,stage,wordLength:STAGE_WORD_LENGTH[stage]});}}>{stages.map(s=><option key={s} value={s}>{stageName(s)}</option>)}</select></label>
+ <div style={{flex:"1 1 180px",padding:"9px 14px",borderRadius:12,background:"#f4f0ff"}}><strong>Required word length</strong><p style={{margin:"6px 0 0"}}>{STAGE_WORD_LENGTH[form.stage]} letters, set automatically</p></div>
  </div>
  <p><strong>Bank: {label(form)}</strong></p>
  <label className="field-label" htmlFor="wd-bulk-words">Bulk word list <span>One word per line, or comma-separated</span></label>
@@ -67,6 +68,6 @@ export default function WordDetectiveAdmin(){
  <div style={{display:"flex",gap:12,flexWrap:"wrap"}}><button type="submit" className="button button-primary" disabled={busy||parsed.valid.length===0||parsed.invalid.length>0||parsed.valid.length>500}>{busy?"Saving…":form.id?"Update word bank":"Save word bank"}</button><button type="button" className="button button-outline" onClick={reset}>Cancel</button></div>
  </form></div>}
  <div className="admin-panel"><h3>Saved word banks ({banks.length})</h3>
- {stages.map(stage=><div key={stage}><h4 style={{marginBottom:8}}>{stage}</h4>{banks.filter(b=>b.stage===stage).map(bank=><div className="admin-list-item" key={bank.id}><div><strong>{label(bank)}</strong><div style={{margin:"7px 0",fontSize:13,overflowWrap:"anywhere"}}>{bank.cases.map(c=>c.word).join(", ")}</div><span>{bank.cases.length} words · {bank.published?"Published":"Draft"}</span></div><div><button type="button" className="button button-outline" onClick={()=>edit(bank)}>Edit</button>{" "}<button type="button" className="button button-outline" disabled={busy} onClick={()=>remove(bank)}>Delete</button></div></div>)}{!banks.some(b=>b.stage===stage)&&<p style={{fontSize:13,color:"#77758b"}}>No word banks for {stage} yet.</p>}</div>)}
+ {stages.map(stage=><div key={stage}><h4 style={{marginBottom:8}}>{stageName(stage)} · {STAGE_WORD_LENGTH[stage]} letters</h4>{banks.filter(b=>b.stage===stage).map(bank=><div className="admin-list-item" key={bank.id}><div><strong>{label(bank)}</strong><div style={{margin:"7px 0",fontSize:13,overflowWrap:"anywhere"}}>{bank.cases.map(c=>c.word).join(", ")}</div><span>{bank.cases.length} words · {bank.published?"Published":"Draft"}{bank.wordLength!==STAGE_WORD_LENGTH[bank.stage]?" · Legacy word lengths; edit to update":""}</span></div><div><button type="button" className="button button-outline" onClick={()=>edit(bank)}>Edit</button>{" "}<button type="button" className="button button-outline" disabled={busy} onClick={()=>remove(bank)}>Delete</button></div></div>)}{!banks.some(b=>b.stage===stage)&&<p style={{fontSize:13,color:"#77758b"}}>No word banks for {stage} yet.</p>}</div>)}
  </div></section>;
 }
