@@ -7,8 +7,8 @@ import type {ResultSetHeader} from "mysql2";
 export const dynamic="force-dynamic";
 const unauthorised=()=>NextResponse.json({error:"Unauthorised"},{status:401});
 async function readBody(request:Request){
- if(Number(request.headers.get("content-length"))>65000)throw Error("Too many words in this request.");
- const text=await request.text();if(text.length>65000)throw Error("Too many words in this request.");
+ if(Number(request.headers.get("content-length"))>200000)throw Error("Too many words in this request.");
+ const text=await request.text();if(text.length>200000)throw Error("Too many words in this request.");
  try{return JSON.parse(text) as unknown;}catch{throw Error("Invalid JSON.");}
 }
 export async function GET(){
@@ -21,7 +21,7 @@ export async function POST(request:Request){
  if(!validAdminOrigin(request))return NextResponse.json({error:"Invalid origin"},{status:403});
  let raw:unknown;try{raw=await readBody(request);}catch(error){return NextResponse.json({error:(error as Error).message},{status:400});}
  const bank=validateBank(raw);
- if(!bank)return NextResponse.json({error:"Choose a key stage and word length (4–12). Add 1–100 unique words of exactly that length, each with a clue and example of at least 8 characters."},{status:400});
+ if(!bank)return NextResponse.json({error:"Choose a key stage and word length (4–12). Add 1–500 unique words of exactly that length, each with a clue and example of at least 8 characters."},{status:400});
  const id=raw&&typeof raw==="object"&&"id" in raw?Number((raw as {id:unknown}).id):0;
  if(!Number.isSafeInteger(id)||id<0)return NextResponse.json({error:"Invalid bank ID"},{status:400});
  try{
