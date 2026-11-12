@@ -3,6 +3,7 @@
 export type Stage = "KS1" | "KS2" | "KS3" | "KS4";
 export type WordCase = { word: string; clue: string; example: string };
 export type LetterMark = "correct" | "present" | "absent";
+export const STAGE_WORD_LENGTH: Record<Stage,number> = { KS1:4, KS2:5, KS3:6, KS4:7 };
 export const STAGE_LABELS: Record<Stage,string> = { KS1:"Ages 5–7",KS2:"Ages 7–11",KS3:"Ages 11–14",KS4:"GCSE" };
 export const CASES: Record<Stage,WordCase[]> = {
   KS1:[
