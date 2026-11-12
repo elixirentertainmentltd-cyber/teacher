@@ -21,7 +21,7 @@ export async function POST(request:Request){
  if(!validAdminOrigin(request))return NextResponse.json({error:"Invalid origin"},{status:403});
  let raw:unknown;try{raw=await readBody(request);}catch(error){return NextResponse.json({error:(error as Error).message},{status:400});}
  const bank=validateBank(raw);
- if(!bank)return NextResponse.json({error:"Provide a title, subject, key stage and 1–100 unique words (4–12 letters), each with a clue and example of at least 8 characters."},{status:400});
+ if(!bank)return NextResponse.json({error:"Choose a key stage and word length (4–12). Add 1–100 unique words of exactly that length, each with a clue and example of at least 8 characters."},{status:400});
  const id=raw&&typeof raw==="object"&&"id" in raw?Number((raw as {id:unknown}).id):0;
  if(!Number.isSafeInteger(id)||id<0)return NextResponse.json({error:"Invalid bank ID"},{status:400});
  try{
@@ -29,6 +29,9 @@ export async function POST(request:Request){
   const connection=await db().getConnection();
   try{
    await connection.beginTransaction();
+   // Keep one bank per key stage and word length. Legacy mixed-length banks remain untouched until edited.
+   const [matching]=await connection.execute<import("mysql2").RowDataPacket[]>("SELECT b.id FROM tml_word_banks b JOIN tml_word_bank_cases c ON c.bank_id=b.id WHERE b.stage=? AND b.id<>? GROUP BY b.id HAVING MIN(CHAR_LENGTH(c.word))=? AND MAX(CHAR_LENGTH(c.word))=? LIMIT 1",[bank.stage,id,bank.wordLength,bank.wordLength]);
+   if(matching.length){await connection.rollback();return NextResponse.json({error:"A bank already exists for "+bank.stage+" with "+bank.wordLength+" letters. Edit that bank instead."},{status:409});}
    let bankId=id;
    if(id){
     const [changed]=await connection.execute<ResultSetHeader>("UPDATE tml_word_banks SET title=?,subject=?,stage=?,year_group=?,published=? WHERE id=?",[bank.title,bank.subject,bank.stage,bank.yearGroup,bank.published?1:0,id]);
