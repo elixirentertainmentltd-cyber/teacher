@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import type { RowDataPacket } from "mysql2";
-import type { Stage, WordCase } from "@/lib/word-detective";
+import { STAGE_WORD_LENGTH, type Stage, type WordCase } from "@/lib/word-detective";
 export type WordBank={id:number;title:string;subject:string;stage:Stage;yearGroup:string;wordLength:number;published:boolean;cases:WordCase[]};
 export const WORD_BANK_SCHEMA=`CREATE TABLE IF NOT EXISTS tml_word_banks (
  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -33,13 +33,14 @@ export function cleanCase(raw:unknown):WordCase|null{
 export function validateBank(raw:unknown):Omit<WordBank,"id">|null{
  if(!raw||typeof raw!=="object")return null;
  const b=raw as Record<string,unknown>;
- const wordLength=Number(b.wordLength);
- const title=""+b.stage+" · "+wordLength+" letters";
- const subject="Vocabulary";
  const stage=b.stage;
+ if(!["KS1","KS2","KS3","KS4"].includes(String(stage)))return null;
+ const wordLength=STAGE_WORD_LENGTH[stage as Stage];
+ const title=stage==="KS4"?"GCSE":String(stage);
+ const subject="Vocabulary";
  const yearGroup="";
  const published=b.published===true;
- if(!["KS1","KS2","KS3","KS4"].includes(String(stage))||!Number.isInteger(wordLength)||wordLength<4||wordLength>12||!Array.isArray(b.cases)||b.cases.length<1||b.cases.length>500)return null;
+ if(!Array.isArray(b.cases)||b.cases.length<1||b.cases.length>500)return null;
  const cases=b.cases.map(cleanCase);
  if(cases.some(c=>!c))return null;
  const words=cases.map(c=>c!.word);
