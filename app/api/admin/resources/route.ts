@@ -18,4 +18,19 @@ export async function POST(req:Request){if(!await isAdmin())return deny();if(!va
  try{await connection.beginTransaction();if(id){await connection.execute("UPDATE tml_resources SET title=?,summary=?,subject_id=?,resource_type_id=?,category_id=?,primary_media_id=?,thumbnail_media_id=?,external_url=?,status=?,featured=?,published_at=? WHERE id=?",[b.title.trim(),b.description.trim(),subject,type,category,media,thumbnail,link||null,b.status,b.featured===true,b.status==='published'?new Date():null,id]);await connection.execute("DELETE FROM tml_resource_stages WHERE resource_id=?",[id]);await connection.execute("DELETE FROM tml_resource_years WHERE resource_id=?",[id]);for(const sid of stageIds)await connection.execute("INSERT INTO tml_resource_stages (resource_id,stage_id) VALUES (?,?)",[id,sid]);for(const yid of yearIds)await connection.execute("INSERT INTO tml_resource_years (resource_id,year_id) VALUES (?,?)",[id,yid]);await connection.commit();return NextResponse.json({id})}
  const slug=slugify(b.title)+"-"+crypto.randomUUID().slice(0,8);
  const [result]=await connection.execute<ResultSetHeader>("INSERT INTO tml_resources (title,slug,summary,subject_id,resource_type_id,category_id,primary_media_id,thumbnail_media_id,external_url,status,featured,published_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",[b.title.trim(),slug,b.description.trim(),subject,type,category,media,link||null,b.status,b.featured===true,b.status==='published'?new Date():null]);for(const sid of stageIds)await connection.execute("INSERT INTO tml_resource_stages (resource_id,stage_id) VALUES (?,?)",[result.insertId,sid]);for(const yid of yearIds)await connection.execute("INSERT INTO tml_resource_years (resource_id,year_id) VALUES (?,?)",[result.insertId,yid]);await connection.commit();return NextResponse.json({id:result.insertId},{status:201})}catch(error){await connection.rollback().catch(()=>{});const code=(error as DbError)?.code;console.error("TML resource save failed",{code:code||"UNKNOWN"});return NextResponse.json({error:safeSaveError(error),code:code||"UNKNOWN"},{status:503})}finally{connection.release()}}
+export async function PATCH(req:Request){
+ if(!await isAdmin())return deny();
+ if(!validAdminOrigin(req))return deny();
+ const b=await req.json().catch(()=>null);
+ if(!Number.isSafeInteger(b?.id)||b.id<1||!(b.thumbnailId===null||(Number.isSafeInteger(b.thumbnailId)&&b.thumbnailId>0)))return NextResponse.json({error:"Invalid resource or image"},{status:400});
+ try{
+  if(b.thumbnailId!==null){
+   const [media]=await db().query<import("mysql2").RowDataPacket[]>("SELECT id FROM tml_media WHERE id=? AND mime_type LIKE 'image/%' LIMIT 1",[b.thumbnailId]);
+   if(!media.length)return NextResponse.json({error:"Selected image does not exist"},{status:400});
+  }
+  const [result]=await db().execute<ResultSetHeader>("UPDATE tml_resources SET thumbnail_media_id=? WHERE id=?",[b.thumbnailId,b.id]);
+  if(!result.affectedRows)return NextResponse.json({error:"Resource not found"},{status:404});
+  return NextResponse.json({ok:true,id:b.id,thumbnailId:b.thumbnailId});
+ }catch(e){console.error("Resource image update failed",(e as {code?:string})?.code||"UNKNOWN");return NextResponse.json({error:"Unable to save resource image"},{status:503})}
+}
 export async function DELETE(req:Request){if(!await isAdmin())return deny();if(!validAdminOrigin(req))return deny();const b=await req.json().catch(()=>null);if(!Number.isSafeInteger(b?.id)||b.id<1)return NextResponse.json({error:"Invalid resource"},{status:400});try{await db().execute("DELETE FROM tml_resources WHERE id=?",[b.id]);return NextResponse.json({ok:true})}catch{return NextResponse.json({error:"Unable to delete"},{status:503})}}
