@@ -4,7 +4,7 @@ export type ResourceType = string;
 export type Resource = {
   id: string; title: string; description: string; subject: Subject; stages: Stage[];
   years: string; type: ResourceType; category: string; url: string;
-  published: boolean;
+  published: boolean; thumbnailUrl?: string;
 };
 export const STAGES: { id: Stage; label: string; years: string; caption: string }[] = [
   { id:"KS1", label:"Key Stage 1", years:"Years 1–2", caption:"First big discoveries" },
